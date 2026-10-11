@@ -19,6 +19,7 @@ Following the authoritative guidelines in `PBL requirements.pdf`, this submissio
 ├── PLAN.md                               <- Strategic 1-page milestone development plan
 ├── ASSUMPTIONS.md                        <- Technical assumptions & architectural decisions
 ├── README.md                             <- Master submission overview & quickstart guide
+├── SETUP_GUIDE.md                        <- Step-by-step Windows Java/Maven setup & run guide
 │
 ├── 01_Project_Proposal/
 │   └── Project_Proposal.md               <- Project proposal meeting all 13 GTU checklist sections
@@ -61,6 +62,9 @@ Following the authoritative guidelines in `PBL requirements.pdf`, this submissio
 ---
 
 ## 🚀 Quickstart: How to Run the Application
+
+> 📖 **Need step-by-step setup instructions for Java JDK 17 & Maven installation and environment path setup on Windows?**  
+> Check the dedicated guide: **[SETUP_GUIDE.md](SETUP_GUIDE.md)**
 
 The application is completely self-contained with an embedded H2 database engine. It requires zero database configuration on the evaluator's computer.
 
