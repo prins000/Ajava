@@ -25,4 +25,9 @@ public class WebViewController {
     public String admin() {
         return "admin";
     }
+
+    @GetMapping("/dashboard")
+    public String dashboard() {
+        return "dashboard";
+    }
 }

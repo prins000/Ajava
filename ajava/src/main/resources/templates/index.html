@@ -50,20 +50,20 @@
       <div class="container">
         <div class="stats-row" style="padding:var(--sp-8) 0;">
           <div class="stat-cell">
-            <span class="stat-value">99.4%</span>
+            <span class="stat-value" id="statAccuracy">99.4%</span>
             <span class="stat-label">Phishing detection accuracy</span>
           </div>
           <div class="stat-cell">
-            <span class="stat-value">5+</span>
+            <span class="stat-value" id="statEngines">5+</span>
             <span class="stat-label">Threat analysis engines</span>
           </div>
           <div class="stat-cell">
-            <span class="stat-value">&lt; 50 ms</span>
+            <span class="stat-value" id="statLatency">&lt; 50 ms</span>
             <span class="stat-label">Heuristic scan latency</span>
           </div>
           <div class="stat-cell">
-            <span class="stat-value">Zero-trust</span>
-            <span class="stat-label">Security architecture</span>
+            <span class="stat-value" id="statScans">Zero-trust</span>
+            <span class="stat-label" id="statScansLabel">Security architecture</span>
           </div>
         </div>
       </div>
@@ -175,6 +175,27 @@
     function handleQuickScan() {
       runScan(_quickTab, document.getElementById('quickInput').value);
     }
+
+    async function loadPublicStats() {
+      try {
+        const stats = await apiFetch('/stats/public');
+        if (stats) {
+          if (document.getElementById('statAccuracy')) document.getElementById('statAccuracy').textContent = stats.accuracyRate || '99.4%';
+          if (document.getElementById('statEngines')) document.getElementById('statEngines').textContent = stats.engineCount || '5+';
+          if (document.getElementById('statLatency')) document.getElementById('statLatency').textContent = stats.latencyLabel || '< 50 ms';
+          if (document.getElementById('statScans') && stats.totalScans !== undefined) {
+            if (stats.totalScans > 0) {
+              document.getElementById('statScans').textContent = stats.totalScans;
+              document.getElementById('statScansLabel').textContent = 'Threat scans processed';
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load dynamic platform stats', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadPublicStats);
   </script>
 </body>
 </html>

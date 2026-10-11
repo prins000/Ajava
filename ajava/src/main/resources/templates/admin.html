@@ -29,10 +29,25 @@
 
   <main>
     <div class="container">
-      <div class="page-header">
-        <h1 class="page-title">Admin Moderation &amp; Telemetry</h1>
-        <p class="page-subtitle">System telemetry, crowdsourced incident moderation queue, and threat engine thresholds.</p>
+      <!-- Admin Access Barrier -->
+      <div id="adminBarrierCard" class="card" style="display:none;text-align:center;padding:var(--sp-12) var(--sp-6);max-width:600px;margin:var(--sp-8) auto;">
+        <div style="font-size:3rem;margin-bottom:var(--sp-4);">🛡️</div>
+        <h2 style="margin-bottom:var(--sp-2);">Administrator Access Required</h2>
+        <p class="text-muted" style="margin-bottom:var(--sp-6);" id="adminBarrierMessage">
+          This portal provides access to threat telemetry, community moderation, and platform configurations. It requires verified <code>ROLE_ADMIN</code> privileges.
+        </p>
+        <div style="display:flex;gap:var(--sp-3);justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-lg" onclick="openAuthModal('login')">Sign In with Admin Account</button>
+          <button class="btn btn-outline btn-lg" onclick="loginDemoAdmin()">1-Click Demo Admin Login</button>
+        </div>
       </div>
+
+      <!-- Admin Main Content -->
+      <div id="adminMainContent" style="display:none;">
+        <div class="page-header">
+          <h1 class="page-title">Admin Moderation &amp; Telemetry</h1>
+          <p class="page-subtitle">System telemetry, crowdsourced incident moderation queue, and threat engine thresholds.</p>
+        </div>
 
       <!-- Analytics Cards -->
       <div class="card" style="margin-bottom:var(--sp-6);">
@@ -66,6 +81,17 @@
         </div>
       </div>
 
+      <!-- Registered Citizen Accounts -->
+      <div class="card" style="margin-bottom:var(--sp-6);">
+        <div class="card-header">
+          <h2 class="card-title">Registered Citizen Accounts</h2>
+          <button class="btn btn-ghost btn-sm" onclick="loadAdminUsers()">Refresh</button>
+        </div>
+        <div class="table-wrapper" id="adminUsersContainer">
+          <div class="empty-state"><p>Loading registered users…</p></div>
+        </div>
+      </div>
+
       <!-- System Configuration -->
       <div class="card">
         <div class="card-header">
@@ -85,6 +111,7 @@
         </div>
         <button class="btn btn-primary" onclick="saveAdminSetting()">Save Configuration</button>
       </div>
+      </div> <!-- end adminMainContent -->
     </div>
   </main>
 
@@ -99,24 +126,92 @@
 
   <script src="/js/app.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Ensure admin auth
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAdminAccess();
+      window.addEventListener('auth-changed', checkAdminAccess);
+    });
+
+    async function checkAdminAccess() {
       const user = getUser();
+      const barrier = document.getElementById('adminBarrierCard');
+      const content = document.getElementById('adminMainContent');
+
       if (!user || user.role !== 'ROLE_ADMIN') {
-        try {
-          const res = await apiFetch('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ email: 'admin@authentica.io', password: 'Admin@1234' })
-          });
-          setAuth(res.accessToken, res.user);
-        } catch (e) {
-          console.error(e);
+        barrier.style.display = 'block';
+        content.style.display = 'none';
+        if (user && user.role !== 'ROLE_ADMIN') {
+          document.getElementById('adminBarrierMessage').innerHTML = `
+            You are currently signed in as <strong>${escHtml(user.name)}</strong> (<code>${escHtml(user.role)}</code>).<br>
+            Administrative operations require verified <code>ROLE_ADMIN</code> privileges.
+          `;
         }
+        return;
       }
 
+      barrier.style.display = 'none';
+      content.style.display = 'block';
       loadAdminMetrics();
       loadAdminReports();
-    });
+      loadAdminUsers();
+    }
+
+    async function loginDemoAdmin() {
+      try {
+        const res = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: 'admin@authentica.io', password: 'Admin@1234' })
+        });
+        setAuth(res.accessToken, res.user);
+        showAlert('Signed in as Security Administrator.', 'safe');
+        checkAdminAccess();
+      } catch (e) {
+        showAlert(e.message, 'danger');
+      }
+    }
+
+    async function loadAdminUsers() {
+      const container = document.getElementById('adminUsersContainer');
+      try {
+        const data = await apiFetch('/admin/users');
+        const list = data.content || [];
+
+        if (list.length === 0) {
+          container.innerHTML = '<div class="empty-state"><p>No users registered yet.</p></div>';
+          return;
+        }
+
+        container.innerHTML = `
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Phone</th>
+                <th>Trust Score</th>
+                <th>Risk Profile</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map(u => `
+                <tr>
+                  <td><div style="font-weight:var(--fw-semi);color:var(--col-ink);">${escHtml(u.name)}</div></td>
+                  <td><span class="text-muted" style="font-size:var(--text-xs);">${escHtml(u.email)}</span></td>
+                  <td><span class="badge ${u.role === 'ROLE_ADMIN' ? 'badge-brand' : 'badge-neutral'}">${escHtml(u.role)}</span></td>
+                  <td><span class="text-muted" style="font-size:var(--text-xs);">${escHtml(u.phone || 'N/A')}</span></td>
+                  <td><span class="score-ring ${riskClass(u.trustScore)}" style="width:32px;height:32px;font-size:var(--text-xs);display:inline-flex;">${u.trustScore}</span></td>
+                  <td><span class="badge ${riskBadgeClass(u.riskLevel)}">${escHtml(u.riskLevel)}</span></td>
+                  <td><span class="badge ${u.isActive ? 'badge-safe' : 'badge-danger'}">${u.isActive ? 'ACTIVE' : 'INACTIVE'}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert-danger">${escHtml(err.message)}</div>`;
+      }
+    }
 
     async function loadAdminMetrics() {
       try {
