@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Authentica — real-time scam, phishing and cyber threat detection platform. Analyse suspicious URLs, SMS, phone numbers, UPI codes and voice calls instantly.">
+  <title>Authentica | Cyber Threat Detection Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ── Navigation ─────────────────────────────────────── -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand" aria-label="Authentica home">
+        <div class="brand-icon" aria-hidden="true">A</div>
+        Authentica
+      </a>
+      <div class="nav-links">
+        <a href="/"          class="nav-link active">Home</a>
+        <a href="/scanner"   class="nav-link">Scanner</a>
+        <a href="/community" class="nav-link">Threat Feed</a>
+      </div>
+      <div class="nav-actions">
+        <a href="/scanner" class="btn btn-primary btn-sm">Scan now</a>
+      </div>
+    </div>
+  </nav>
+
+  <div id="globalAlert" class="alert" style="display:none;position:fixed;top:70px;right:var(--sp-6);z-index:300;max-width:400px;"></div>
+
+  <main>
+    <!-- ── Hero ──────────────────────────────────────────── -->
+    <section class="hero">
+      <div class="container">
+        <span class="hero-eyebrow">Threat Intelligence Platform</span>
+        <h1 class="hero-title">Detect Scams &amp; Cyber Threats in Seconds</h1>
+        <p class="hero-lead">
+          Analyse suspicious links, messages, phone numbers, QR codes and voice calls against real-time threat intelligence. Free and instant.
+        </p>
+        <div class="hero-actions">
+          <a href="/scanner" class="btn btn-primary btn-lg">Run a scan</a>
+          <a href="/community" class="btn btn-outline btn-lg">View threat feed</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Stats ─────────────────────────────────────────── -->
+    <section style="padding-bottom:var(--sp-12);background:var(--col-surface);border-top:1px solid var(--col-border);border-bottom:1px solid var(--col-border);">
+      <div class="container">
+        <div class="stats-row" style="padding:var(--sp-8) 0;">
+          <div class="stat-cell">
+            <span class="stat-value">99.4%</span>
+            <span class="stat-label">Phishing detection accuracy</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">5+</span>
+            <span class="stat-label">Threat analysis engines</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">&lt; 50 ms</span>
+            <span class="stat-label">Heuristic scan latency</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">Zero-trust</span>
+            <span class="stat-label">Security architecture</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Quick Scan ─────────────────────────────────────── -->
+    <section style="padding:var(--sp-12) 0;">
+      <div class="container">
+        <h2 style="text-align:center;margin-bottom:var(--sp-2);">Quick Threat Check</h2>
+        <p style="text-align:center;color:var(--col-muted);margin-bottom:var(--sp-8);">Paste anything suspicious — URL, SMS text or phone number — and get an instant verdict.</p>
+
+        <div class="scan-widget">
+          <div class="tab-strip" id="quickTabStrip">
+            <button class="tab-btn active" id="qtab-URL"   onclick="switchQuickTab('URL',   this)">URL / Link</button>
+            <button class="tab-btn"        id="qtab-TEXT"  onclick="switchQuickTab('TEXT',  this)">SMS / Message</button>
+            <button class="tab-btn"        id="qtab-PHONE" onclick="switchQuickTab('PHONE', this)">Phone Number</button>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" id="quickLabel">Suspicious URL</label>
+            <input type="text" id="quickInput" class="form-control" placeholder="https://…">
+          </div>
+
+          <div style="display:flex;gap:var(--sp-3);align-items:center;margin-bottom:var(--sp-4);">
+            <button class="btn btn-primary" id="scanSubmitBtn" onclick="handleQuickScan()">Analyse</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadDemoThreat()">Load example</button>
+          </div>
+
+          <div id="scanResult"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Features ──────────────────────────────────────── -->
+    <section style="padding:var(--sp-10) 0 var(--sp-16);background:var(--col-bg);">
+      <div class="container">
+        <h2 style="margin-bottom:var(--sp-2);">What Authentica detects</h2>
+        <p style="color:var(--col-muted);margin-bottom:var(--sp-8);max-width:560px;">Six specialised threat engines working together to protect you from every major attack vector.</p>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F517;</div>
+            <h3 class="feature-title">URL &amp; Domain Analysis</h3>
+            <p class="feature-desc">Detects typosquatting, punycode attacks, high-risk TLDs, IP literals and known phishing domains.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F4AC;</div>
+            <h3 class="feature-title">SMS &amp; Message Scanning</h3>
+            <p class="feature-desc">Identifies urgency manipulation, fake KYC deadlines, electricity disconnection threats and smishing patterns.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F4F1;</div>
+            <h3 class="feature-title">UPI &amp; QR Shield</h3>
+            <p class="feature-desc">Validates UPI payment URIs and QR code payloads, flagging deceptive "collect" vs "pay" flows.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F4DE;</div>
+            <h3 class="feature-title">Phone Number Lookup</h3>
+            <p class="feature-desc">Checks caller IDs against a live blacklist of known scam numbers and fraud hotlines.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F399;</div>
+            <h3 class="feature-title">Voice &amp; Extortion Analysis</h3>
+            <p class="feature-desc">Screens call transcripts for digital-arrest scripts, CBI impersonation and courier-parcel extortion patterns.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F465;</div>
+            <h3 class="feature-title">Community Intelligence</h3>
+            <p class="feature-desc">Crowdsourced incident reports with upvoting and geo-tagging power an always-current threat database.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p class="footer-copy">&copy; 2026 Authentica Inc. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="/scanner">Scanner</a>
+        <a href="/community">Threat Feed</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script>
+    let _quickTab = 'URL';
+
+    function switchQuickTab(tab, btn) {
+      _quickTab = tab;
+      document.querySelectorAll('#quickTabStrip .tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const label = document.getElementById('quickLabel');
+      const input = document.getElementById('quickInput');
+      if (tab === 'URL')   { label.textContent = 'Suspicious URL or domain'; input.placeholder = 'https://secure-sbi-kyc-update.com/login'; }
+      if (tab === 'TEXT')  { label.textContent = 'Suspicious SMS / message'; input.placeholder = 'Urgent! Your electricity will be disconnected…'; }
+      if (tab === 'PHONE') { label.textContent = 'Unknown phone number';     input.placeholder = '+91 98765 43210'; }
+      document.getElementById('scanResult').innerHTML = '';
+    }
+
+    function loadDemoThreat() {
+      const input = document.getElementById('quickInput');
+      if (_quickTab === 'URL')   input.value = 'http://secure-sbi-update-kyc.com/login';
+      if (_quickTab === 'TEXT')  input.value = 'Dear customer, your electricity power will be disconnected tonight at 9:30 PM. Please immediately pay your bill via the link.';
+      if (_quickTab === 'PHONE') input.value = '+919876543210';
+    }
+
+    function handleQuickScan() {
+      runScan(_quickTab, document.getElementById('quickInput').value);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Authentica Scanner — deep heuristic analysis for URLs, SMS messages, UPI codes, phone numbers and voice transcripts.">
+  <title>Scanner | Authentica</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand" aria-label="Authentica home">
+        <div class="brand-icon" aria-hidden="true">A</div>
+        Authentica
+      </a>
+      <div class="nav-links">
+        <a href="/"          class="nav-link">Home</a>
+        <a href="/scanner"   class="nav-link active">Scanner</a>
+        <a href="/community" class="nav-link">Threat Feed</a>
+      </div>
+      <div class="nav-actions">
+        <a href="/community" class="btn btn-outline btn-sm">Threat Feed</a>
+      </div>
+    </div>
+  </nav>
+
+  <div id="globalAlert" class="alert" style="display:none;position:fixed;top:70px;right:var(--sp-6);z-index:300;max-width:400px;"></div>
+
+  <main>
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">Threat Scanner</h1>
+        <p class="page-subtitle">Choose an engine, paste your input and receive a detailed threat analysis report.</p>
+      </div>
+
+      <div class="card">
+        <!-- Engine tabs -->
+        <div class="tab-strip" id="engineTabStrip">
+          <button class="tab-btn active" id="tab-URL"   onclick="selectEngine('URL',   this)">URL / Link</button>
+          <button class="tab-btn"        id="tab-TEXT"  onclick="selectEngine('TEXT',  this)">SMS / Message</button>
+          <button class="tab-btn"        id="tab-QR"    onclick="selectEngine('QR',    this)">QR / UPI</button>
+          <button class="tab-btn"        id="tab-PHONE" onclick="selectEngine('PHONE', this)">Phone</button>
+          <button class="tab-btn"        id="tab-VOICE" onclick="selectEngine('VOICE', this)">Voice Transcript</button>
+        </div>
+
+        <!-- Engine 1: URL -->
+        <div id="panel-URL" class="engine-panel active">
+          <div class="form-group">
+            <label class="form-label" for="urlInput">Target URL or domain</label>
+            <input type="text" id="urlInput" class="form-control" placeholder="https://secure-sbi-kyc-update.com/login">
+          </div>
+          <div class="sample-row">
+            <span class="sample-label">Examples:</span>
+            <button class="btn btn-ghost btn-sm" onclick="setVal('urlInput','http://secure-sbi-update-kyc.com/login')">Phishing link</button>
+            <button class="btn btn-ghost btn-sm" onclick="setVal('urlInput','http://electricity-bill-pay-quick.xyz/pay')">Suspicious TLD</button>
+            <button class="btn btn-ghost btn-sm" onclick="setVal('urlInput','https://cybercrime.gov.in')">Safe (gov.in)</button>
+          </div>
+        </div>
+
+        <!-- Engine 2: TEXT -->
+        <div id="panel-TEXT" class="engine-panel">
+          <div class="form-group">
+            <label class="form-label" for="textInput">Message body</label>
+            <textarea id="textInput" class="form-control" placeholder="Paste the suspicious SMS or message text here…"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="senderInput">Sender / Header (optional)</label>
+            <input type="text" id="senderInput" class="form-control" placeholder="+91 98765 43210 or BZ-SBIBNK">
+          </div>
+          <div class="sample-row">
+            <span class="sample-label">Examples:</span>
+            <button class="btn btn-ghost btn-sm" onclick="setVal('textInput','Dear consumer your electricity power will be disconnected tonight at 9:30 PM from power office because your previous month bill was not updated. Please immediately contact our electricity officer at 9876543210')">Electricity threat</button>
+            <button class="btn btn-ghost btn-sm" onclick="setVal('textInput','Your SBI netbanking will be blocked within 24 hours due to pending KYC. Click http://secure-sbi-update-kyc.com/login and update PAN card details.')">Banking KYC scam</button>
+          </div>
+        </div>
+
+        <!-- Engine 3: QR/UPI -->
+        <div id="panel-QR" class="engine-panel">
+          <div class="form-group">
+            <label class="form-label" for="qrInput">Decoded QR content or UPI URI</label>
+            <input type="text" id="qrInput" class="form-control" placeholder="upi://pay?pa=refund-desk@ybl&amp;pn=QuickRefundHelpdesk&amp;am=5000">
+          </div>
+          <div class="sample-row">
+            <span class="sample-label">Examples:</span>
+            <button class="btn btn-ghost btn-sm" onclick="setVal('qrInput','upi://pay?pa=refund-desk@ybl&pn=QuickRefundHelpdesk&tn=claim%20refund&am=5000')">Deceptive collect UPI</button>
+            <button class="btn btn-ghost btn-sm" onclick="setVal('qrInput','upi://pay?pa=merchant-store@okaxis&pn=SupermarketMart&am=250')">Standard merchant pay</button>
+          </div>
+        </div>
+
+        <!-- Engine 4: PHONE -->
+        <div id="panel-PHONE" class="engine-panel">
+          <div class="form-group">
+            <label class="form-label" for="phoneInput">Phone number</label>
+            <input type="tel" id="phoneInput" class="form-control" placeholder="+91 98765 43210">
+          </div>
+          <div class="sample-row">
+            <span class="sample-label">Examples:</span>
+            <button class="btn btn-ghost btn-sm" onclick="setVal('phoneInput','+919876543210')">Blacklisted number</button>
+            <button class="btn btn-ghost btn-sm" onclick="setVal('phoneInput','1930')">Cyber helpline (safe)</button>
+          </div>
+        </div>
+
+        <!-- Engine 5: VOICE -->
+        <div id="panel-VOICE" class="engine-panel">
+          <div class="form-group">
+            <label class="form-label" for="voiceTranscriptInput">Call transcript</label>
+            <textarea id="voiceTranscriptInput" class="form-control" placeholder="Paste the transcribed text from the suspicious call…"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="voiceDurationInput">Call duration (seconds)</label>
+            <input type="number" id="voiceDurationInput" class="form-control" value="720">
+          </div>
+          <div class="sample-row">
+            <span class="sample-label">Example:</span>
+            <button class="btn btn-ghost btn-sm" onclick="setVal('voiceTranscriptInput','This is CBI officer Rajesh Kumar from Crime Branch Mumbai. A FedEx parcel with your passport and 500g MDMA was seized at customs. You are placed under digital arrest. Transfer bail amount to RBI verification account immediately.')">Digital arrest script</button>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div style="margin-top:var(--sp-4);">
+          <button class="btn btn-primary" id="scanSubmitBtn" onclick="executeStudioScan()">Analyse</button>
+        </div>
+
+        <!-- Result -->
+        <div id="scanResult"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p class="footer-copy">&copy; 2026 Authentica Inc. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="/community">Threat Feed</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script>
+    let activeEngine = 'URL';
+
+    function selectEngine(type, btn) {
+      activeEngine = type;
+      document.querySelectorAll('#engineTabStrip .tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.engine-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-' + type).classList.add('active');
+      document.getElementById('scanResult').innerHTML = '';
+    }
+
+    function setVal(id, val) { document.getElementById(id).value = val; }
+
+    function executeStudioScan() {
+      let target = '', sender = null, duration = null, transcript = null;
+      if (activeEngine === 'URL')   target = document.getElementById('urlInput').value;
+      if (activeEngine === 'TEXT')  { target = document.getElementById('textInput').value; sender = document.getElementById('senderInput').value || null; }
+      if (activeEngine === 'QR')    target = document.getElementById('qrInput').value;
+      if (activeEngine === 'PHONE') target = document.getElementById('phoneInput').value;
+      if (activeEngine === 'VOICE') {
+        transcript = document.getElementById('voiceTranscriptInput').value;
+        target     = transcript;
+        duration   = parseInt(document.getElementById('voiceDurationInput').value) || 0;
+      }
+      runScan(activeEngine, target, sender, duration, transcript);
+    }
+  </script>
+</body>
+</html>
