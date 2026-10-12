@@ -256,10 +256,6 @@
       window.addEventListener('auth-changed', checkAdminAccess);
     });
 
-    function toggleSidebar() {
-      const sb = document.getElementById('appSidebar');
-      if (sb) sb.classList.toggle('open');
-    }
 
     async function checkAdminAccess() {
       const user = getUser();

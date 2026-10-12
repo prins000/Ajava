@@ -303,10 +303,6 @@
       window.addEventListener('auth-changed', initDashboard);
     });
 
-    function toggleSidebar() {
-      const sb = document.getElementById('appSidebar');
-      if (sb) sb.classList.toggle('open');
-    }
 
     async function initDashboard() {
       const user = getUser();

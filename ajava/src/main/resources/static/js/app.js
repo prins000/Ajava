@@ -275,6 +275,67 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ── Global Responsive Sidebar & Hamburger Management ────────
+function toggleSidebar(forceState) {
+  const sb = document.getElementById('appSidebar');
+  const shell = document.querySelector('.app-shell');
+  if (!sb) return;
+
+  let backdrop = document.getElementById('sidebarBackdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'sidebarBackdrop';
+    backdrop.className = 'sidebar-backdrop';
+    backdrop.onclick = () => toggleSidebar(false);
+    document.body.appendChild(backdrop);
+  }
+
+  const isMobile = window.innerWidth <= 992;
+  if (isMobile) {
+    const shouldOpen = forceState !== undefined ? forceState : !sb.classList.contains('open');
+    if (shouldOpen) {
+      sb.classList.add('open');
+      backdrop.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    } else {
+      sb.classList.remove('open');
+      backdrop.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  } else {
+    // Desktop: collapse / expand
+    if (shell) {
+      shell.classList.toggle('sidebar-collapsed');
+    }
+  }
+}
+
+// Close mobile sidebar on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    toggleSidebar(false);
+  }
+});
+
+// Auto-close mobile sidebar when clicking a navigation link
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('.sidebar-link, .sidebar-cta-btn');
+  if (link && window.innerWidth <= 992) {
+    toggleSidebar(false);
+  }
+});
+
+// Handle window resize cleanly
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 992) {
+    const sb = document.getElementById('appSidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sb) sb.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+});
+
 // ── Auth Modal (Login & Register) ────────────────────────────
 function initAuthModal() {
   if (document.getElementById('authModalOverlay')) return;

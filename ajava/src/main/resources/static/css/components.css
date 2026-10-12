@@ -506,10 +506,13 @@ select.form-control {
 /* ── Tables ──────────────────────────────────────────────── */
 .table-wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 .data-table {
   width: 100%;
+  min-width: 580px;
   border-collapse: collapse;
   font-size: var(--text-sm);
 }
@@ -951,4 +954,52 @@ select.form-control {
   border-radius: 3px;
   font-weight: 600;
   border-bottom: 2px solid #a855f7;
+}
+
+/* ── Mobile & Tablet Component Layout Optimizations ───────── */
+@media (max-width: 768px) {
+  .card {
+    padding: var(--sp-4);
+  }
+  .card-header {
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+  .modal {
+    max-height: 92vh;
+    overflow-y: auto;
+    margin: var(--sp-2);
+  }
+  .scanner-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--sp-2);
+  }
+  .stat-cell {
+    padding: var(--sp-3);
+  }
+  .stat-value {
+    font-size: 1.45rem;
+  }
+  .stat-label {
+    font-size: 10px;
+  }
+  .feed-card {
+    padding: var(--sp-3);
+  }
+  .feed-card-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .feed-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }
