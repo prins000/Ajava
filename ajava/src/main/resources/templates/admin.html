@@ -92,6 +92,88 @@
         </div>
       </div>
 
+      <!-- Cyber Crime Incident Support Tickets Queue -->
+      <div class="card" style="margin-bottom:var(--sp-6);">
+        <div class="card-header">
+          <h2 class="card-title">Citizen Incident Support Helpdesk Queue</h2>
+          <button class="btn btn-ghost btn-sm" onclick="loadAdminTickets()">Refresh</button>
+        </div>
+        <div class="table-wrapper" id="adminTicketsContainer">
+          <div class="empty-state"><p>Loading support tickets…</p></div>
+        </div>
+      </div>
+
+      <!-- Citizen Feedback & Detection Engine Ratings -->
+      <div class="card" style="margin-bottom:var(--sp-6);">
+        <div class="card-header">
+          <h2 class="card-title">Citizen Platform Feedback &amp; Engine Ratings</h2>
+          <button class="btn btn-ghost btn-sm" onclick="loadAdminFeedback()">Refresh</button>
+        </div>
+        <div class="table-wrapper" id="adminFeedbackContainer">
+          <div class="empty-state"><p>Loading feedback…</p></div>
+        </div>
+      </div>
+
+      <!-- Dynamic Threat Detection Rules Engine (Zero Hardcoded Logic) -->
+      <div class="card" style="margin-bottom:var(--sp-6);">
+        <div class="card-header" style="flex-wrap:wrap;gap:var(--sp-2);">
+          <div>
+            <h2 class="card-title">Dynamic Threat Detection Rules Console</h2>
+            <p class="text-muted" style="font-size:var(--text-xs);margin:0;">Manage live phishing patterns, malicious TLDs, urgency triggers, and extortion markers stored directly in MySQL.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="loadAdminRules()">Refresh Rules</button>
+        </div>
+
+        <!-- Add New Rule Form -->
+        <div style="background:var(--col-surface-2, #f8fafc);padding:var(--sp-4);border-radius:var(--rad-md);margin-bottom:var(--sp-4);border:1px solid var(--col-border);">
+          <div style="font-weight:var(--fw-semi);font-size:var(--text-sm);margin-bottom:var(--sp-3);color:var(--col-ink);">
+            ➕ Register Emerging Scam Pattern into Detection Engine
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:var(--sp-3);align-items:flex-end;">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" for="newRuleCategory" style="font-size:var(--text-xs);">Engine Vector Category</label>
+              <select id="newRuleCategory" class="form-control" style="font-size:var(--text-xs);padding:var(--sp-2);">
+                <option value="URL_KEYWORD">URL Lure Keyword</option>
+                <option value="SUSPICIOUS_TLD">Suspicious Abuse TLD</option>
+                <option value="SMS_URGENCY">SMS Urgency Trigger</option>
+                <option value="SMS_FINANCIAL_LURE">SMS Financial Reward Lure</option>
+                <option value="SMS_CREDENTIAL_TRAP">SMS Credential Harvest Trap</option>
+                <option value="VOICE_EXTORTION">Voice / Digital Arrest Marker</option>
+                <option value="QR_DECEPTIVE">QR Deceptive Merchant Keyword</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" for="newRulePattern" style="font-size:var(--text-xs);">Pattern / Keyword / Extension</label>
+              <input type="text" id="newRulePattern" class="form-control" placeholder="e.g. netflix-login, .live, parcel confiscated" style="font-size:var(--text-xs);padding:var(--sp-2);">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" for="newRuleWeight" style="font-size:var(--text-xs);">Threat Weight (1-50)</label>
+              <input type="number" id="newRuleWeight" class="form-control" value="25" min="5" max="90" style="font-size:var(--text-xs);padding:var(--sp-2);">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" for="newRuleDescription" style="font-size:var(--text-xs);">Flag Description (Shown to Citizen)</label>
+              <input type="text" id="newRuleDescription" class="form-control" placeholder="e.g. Deceptive brand impersonation" style="font-size:var(--text-xs);padding:var(--sp-2);">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="submitAddRule()" style="height:36px;">Add Rule</button>
+          </div>
+        </div>
+
+        <!-- Filter category strip -->
+        <div style="display:flex;gap:var(--sp-2);overflow-x:auto;padding-bottom:var(--sp-2);margin-bottom:var(--sp-3);" id="ruleFilterStrip">
+          <button class="btn btn-outline btn-sm active" onclick="filterRulesByCategory('', this)">All Categories</button>
+          <button class="btn btn-outline btn-sm" onclick="filterRulesByCategory('URL_KEYWORD', this)">URL Keywords</button>
+          <button class="btn btn-outline btn-sm" onclick="filterRulesByCategory('SUSPICIOUS_TLD', this)">Abuse TLDs</button>
+          <button class="btn btn-outline btn-sm" onclick="filterRulesByCategory('SMS_URGENCY', this)">SMS Urgency</button>
+          <button class="btn btn-outline btn-sm" onclick="filterRulesByCategory('SMS_FINANCIAL_LURE', this)">SMS Lures</button>
+          <button class="btn btn-outline btn-sm" onclick="filterRulesByCategory('VOICE_EXTORTION', this)">Digital Arrest</button>
+          <button class="btn btn-outline btn-sm" onclick="filterRulesByCategory('QR_DECEPTIVE', this)">QR Deceptive</button>
+        </div>
+
+        <div class="table-wrapper" id="adminRulesContainer">
+          <div class="empty-state"><p>Loading dynamic threat rules…</p></div>
+        </div>
+      </div>
+
       <!-- System Configuration -->
       <div class="card">
         <div class="card-header">
@@ -153,6 +235,9 @@
       loadAdminMetrics();
       loadAdminReports();
       loadAdminUsers();
+      loadAdminTickets();
+      loadAdminFeedback();
+      loadAdminRules();
     }
 
     async function loginDemoAdmin() {
@@ -295,6 +380,222 @@
         showAlert('Configuration saved successfully.', 'safe');
       } catch (e) {
         showAlert(e.message, 'danger');
+      }
+    }
+
+    // ── Admin Tickets Queue ──────────────────────────────────────
+    async function loadAdminTickets() {
+      const container = document.getElementById('adminTicketsContainer');
+      try {
+        const data = await apiFetch('/tickets/admin');
+        const list = data.content || [];
+
+        if (list.length === 0) {
+          container.innerHTML = '<div class="empty-state"><p>No support tickets in queue.</p></div>';
+          return;
+        }
+
+        container.innerHTML = `
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Priority</th>
+                <th>Subject &amp; Description</th>
+                <th>Citizen Email</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map(t => {
+                const prioBadge = t.priority === 'HIGH' ? 'badge-danger' : (t.priority === 'MEDIUM' ? 'badge-warn' : 'badge-neutral');
+                const stBadge = t.status === 'RESOLVED' ? 'badge-safe' : (t.status === 'IN_PROGRESS' ? 'badge-warn' : 'badge-danger');
+                return `
+                  <tr>
+                    <td><span class="badge ${prioBadge}">${escHtml(t.priority)}</span></td>
+                    <td>
+                      <div style="font-weight:var(--fw-semi);color:var(--col-ink);">${escHtml(t.subject)}</div>
+                      <div style="font-size:var(--text-xs);color:var(--col-muted);">${escHtml(t.description)}</div>
+                    </td>
+                    <td><span class="text-muted" style="font-size:var(--text-xs);">${escHtml(t.userEmail || 'Anonymous')}</span></td>
+                    <td><span class="badge ${stBadge}">${escHtml(t.status)}</span></td>
+                    <td><span class="text-muted" style="font-size:var(--text-xs);">${fmtDate(t.createdAt)}</span></td>
+                    <td>
+                      <div style="display:flex;gap:var(--sp-2);">
+                        <button class="btn btn-outline btn-sm" onclick="setTicketStatus(${t.id}, 'IN_PROGRESS')">Process</button>
+                        <button class="btn btn-primary btn-sm" onclick="setTicketStatus(${t.id}, 'RESOLVED')">Resolve</button>
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert-danger">${escHtml(err.message)}</div>`;
+      }
+    }
+
+    async function setTicketStatus(id, status) {
+      try {
+        await apiFetch(`/tickets/${id}/status?status=${status}`, { method: 'PATCH' });
+        showAlert(`Ticket #${id} status updated to ${status}.`, 'safe');
+        loadAdminTickets();
+      } catch (err) {
+        showAlert(err.message, 'danger');
+      }
+    }
+
+    // ── Admin Feedback Review ────────────────────────────────────
+    async function loadAdminFeedback() {
+      const container = document.getElementById('adminFeedbackContainer');
+      try {
+        const list = await apiFetch('/feedback');
+        if (!list || list.length === 0) {
+          container.innerHTML = '<div class="empty-state"><p>No user feedback entries recorded yet.</p></div>';
+          return;
+        }
+
+        container.innerHTML = `
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Rating</th>
+                <th>Category</th>
+                <th>Citizen Comment</th>
+                <th>Submitted By</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map(f => `
+                <tr>
+                  <td><span style="color:#f59e0b;font-weight:var(--fw-bold);">${'★'.repeat(f.rating || 5)}</span></td>
+                  <td><span class="badge badge-neutral">${escHtml(f.category)}</span></td>
+                  <td><div style="font-size:var(--text-sm);color:var(--col-ink);">${escHtml(f.comment)}</div></td>
+                  <td><span class="text-muted" style="font-size:var(--text-xs);">${escHtml(f.userEmail || 'Anonymous')}</span></td>
+                  <td><span class="text-muted" style="font-size:var(--text-xs);">${fmtDate(f.createdAt)}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert-danger">${escHtml(err.message)}</div>`;
+      }
+    }
+
+    // ── Dynamic Threat Rules Management ───────────────────────────
+    let currentRuleCategoryFilter = '';
+
+    function filterRulesByCategory(category, btn) {
+      currentRuleCategoryFilter = category;
+      document.querySelectorAll('#ruleFilterStrip .btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      loadAdminRules(category);
+    }
+
+    async function loadAdminRules(category = currentRuleCategoryFilter) {
+      const container = document.getElementById('adminRulesContainer');
+      try {
+        const url = category ? `/admin/rules?category=${encodeURIComponent(category)}` : '/admin/rules';
+        const list = await apiFetch(url);
+        if (!list || list.length === 0) {
+          container.innerHTML = '<div class="empty-state"><p>No dynamic threat rules found for this category.</p></div>';
+          return;
+        }
+
+        const catBadges = {
+          URL_KEYWORD: 'badge-brand',
+          SUSPICIOUS_TLD: 'badge-warn',
+          SMS_URGENCY: 'badge-danger',
+          SMS_FINANCIAL_LURE: 'badge-warn',
+          SMS_CREDENTIAL_TRAP: 'badge-danger',
+          VOICE_EXTORTION: 'badge-danger',
+          QR_DECEPTIVE: 'badge-warn'
+        };
+
+        container.innerHTML = `
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Pattern / Keyword</th>
+                <th>Category</th>
+                <th>Threat Weight</th>
+                <th>Detection Flag Message</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map(r => `
+                <tr style="${!r.isActive ? 'opacity:0.55;' : ''}">
+                  <td><code style="font-size:var(--text-xs);padding:2px 6px;border-radius:4px;background:var(--col-surface-2);color:var(--col-ink);font-weight:var(--fw-bold);">${escHtml(r.pattern)}</code></td>
+                  <td><span class="badge ${catBadges[r.category] || 'badge-neutral'}">${escHtml(r.category)}</span></td>
+                  <td><span style="font-weight:var(--fw-bold);color:${r.weight >= 30 ? 'var(--col-danger)' : 'var(--col-warn)'};">+${r.weight} pts</span></td>
+                  <td><span style="font-size:var(--text-xs);color:var(--col-muted);">${escHtml(r.description || 'N/A')}</span></td>
+                  <td><span class="badge ${r.isActive ? 'badge-safe' : 'badge-neutral'}">${r.isActive ? 'ACTIVE' : 'DISABLED'}</span></td>
+                  <td>
+                    <div style="display:flex;gap:var(--sp-2);">
+                      <button class="btn btn-outline btn-sm" onclick="toggleRuleStatus(${r.id})">${r.isActive ? 'Disable' : 'Enable'}</button>
+                      <button class="btn btn-ghost btn-sm text-danger" onclick="deleteRule(${r.id})" style="color:var(--col-danger);">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert-danger">${escHtml(err.message)}</div>`;
+      }
+    }
+
+    async function submitAddRule() {
+      const category = document.getElementById('newRuleCategory').value;
+      const pattern = document.getElementById('newRulePattern').value.trim();
+      const weight = parseInt(document.getElementById('newRuleWeight').value, 10) || 15;
+      const description = document.getElementById('newRuleDescription').value.trim();
+
+      if (!pattern) {
+        showAlert('Pattern or keyword cannot be empty.', 'danger');
+        return;
+      }
+
+      try {
+        await apiFetch('/admin/rules', {
+          method: 'POST',
+          body: JSON.stringify({ category, pattern, weight, description })
+        });
+        showAlert(`Dynamic rule '${pattern}' added successfully into detection engine!`, 'safe');
+        document.getElementById('newRulePattern').value = '';
+        document.getElementById('newRuleDescription').value = '';
+        loadAdminRules();
+      } catch (err) {
+        showAlert(err.message, 'danger');
+      }
+    }
+
+    async function toggleRuleStatus(id) {
+      try {
+        const updated = await apiFetch(`/admin/rules/${id}/toggle`, { method: 'PATCH' });
+        showAlert(`Rule #${id} active status updated.`, 'safe');
+        loadAdminRules();
+      } catch (err) {
+        showAlert(err.message, 'danger');
+      }
+    }
+
+    async function deleteRule(id) {
+      if (!confirm(`Are you sure you want to permanently delete dynamic rule #${id}?`)) return;
+      try {
+        await apiFetch(`/admin/rules/${id}`, { method: 'DELETE' });
+        showAlert(`Rule #${id} deleted from database.`, 'safe');
+        loadAdminRules();
+      } catch (err) {
+        showAlert(err.message, 'danger');
       }
     }
   </script>

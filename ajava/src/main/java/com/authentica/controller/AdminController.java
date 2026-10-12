@@ -19,10 +19,67 @@ public class AdminController {
 
     private final AdminService adminService;
     private final CommunityReportService communityReportService;
+    private final com.authentica.repository.HeuristicRuleRepository ruleRepository;
 
-    public AdminController(AdminService adminService, CommunityReportService communityReportService) {
+    public AdminController(AdminService adminService,
+                           CommunityReportService communityReportService,
+                           com.authentica.repository.HeuristicRuleRepository ruleRepository) {
         this.adminService = adminService;
         this.communityReportService = communityReportService;
+        this.ruleRepository = ruleRepository;
+    }
+
+    @GetMapping("/rules")
+    public ResponseEntity<ApiResponse<java.util.List<com.authentica.model.HeuristicRule>>> getRules(
+            @RequestParam(required = false) com.authentica.model.enums.RuleCategory category) {
+        if (category != null) {
+            return ResponseEntity.ok(ApiResponse.success("Filtered threat rules retrieved.", ruleRepository.findByCategoryOrderByCreatedAtDesc(category)));
+        }
+        return ResponseEntity.ok(ApiResponse.success("All dynamic threat rules retrieved.", ruleRepository.findAllByOrderByCategoryAscCreatedAtDesc()));
+    }
+
+    @PostMapping("/rules")
+    public ResponseEntity<ApiResponse<com.authentica.model.HeuristicRule>> createRule(
+            @RequestBody Map<String, Object> body) {
+        String categoryStr = (String) body.get("category");
+        String pattern = (String) body.get("pattern");
+        Integer weight = body.get("weight") != null ? Integer.parseInt(body.get("weight").toString()) : 15;
+        String description = (String) body.get("description");
+
+        if (categoryStr == null || pattern == null || pattern.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Category and pattern are required."));
+        }
+
+        com.authentica.model.enums.RuleCategory category;
+        try {
+            category = com.authentica.model.enums.RuleCategory.valueOf(categoryStr.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid rule category: " + categoryStr));
+        }
+
+        com.authentica.model.HeuristicRule rule = new com.authentica.model.HeuristicRule(category, pattern.trim().toLowerCase(), weight, description);
+        com.authentica.model.HeuristicRule saved = ruleRepository.save(rule);
+        return ResponseEntity.ok(ApiResponse.success("Dynamic threat rule added successfully.", saved));
+    }
+
+    @PatchMapping("/rules/{id}/toggle")
+    public ResponseEntity<ApiResponse<com.authentica.model.HeuristicRule>> toggleRule(@PathVariable Long id) {
+        com.authentica.model.HeuristicRule rule = ruleRepository.findById(id).orElse(null);
+        if (rule == null) {
+            return ResponseEntity.status(404).body(ApiResponse.error("Rule not found with id: " + id));
+        }
+        rule.setIsActive(!rule.getIsActive());
+        com.authentica.model.HeuristicRule updated = ruleRepository.save(rule);
+        return ResponseEntity.ok(ApiResponse.success("Rule active status toggled.", updated));
+    }
+
+    @DeleteMapping("/rules/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteRule(@PathVariable Long id) {
+        if (!ruleRepository.existsById(id)) {
+            return ResponseEntity.status(404).body(ApiResponse.error("Rule not found with id: " + id));
+        }
+        ruleRepository.deleteById(id);
+        return ResponseEntity.ok(ApiResponse.success("Dynamic threat rule deleted successfully.", null));
     }
 
     @GetMapping("/analytics")

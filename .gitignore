@@ -25,3 +25,9 @@ ajava/target/
 # OS generated files
 Thumbs.db
 .DS_Store
+
+# Secrets and Local Environment configs
+*secrets*.properties
+.env*
+application-local.properties
+

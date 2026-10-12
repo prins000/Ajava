@@ -16,10 +16,14 @@ public class QrAnalysisEngine {
 
     private final FraudQRRepository fraudQRRepository;
     private final UrlAnalysisEngine urlAnalysisEngine;
+    private final com.authentica.repository.HeuristicRuleRepository ruleRepository;
 
-    public QrAnalysisEngine(FraudQRRepository fraudQRRepository, UrlAnalysisEngine urlAnalysisEngine) {
+    public QrAnalysisEngine(FraudQRRepository fraudQRRepository,
+                            UrlAnalysisEngine urlAnalysisEngine,
+                            com.authentica.repository.HeuristicRuleRepository ruleRepository) {
         this.fraudQRRepository = fraudQRRepository;
         this.urlAnalysisEngine = urlAnalysisEngine;
+        this.ruleRepository = ruleRepository;
     }
 
     public EngineResult analyze(String qrContent) {
@@ -55,11 +59,15 @@ public class QrAnalysisEngine {
                     threatScore += 85;
                 }
 
-                // Check for suspicious deceptive handle names (e.g. refund, customer care, support)
+                // Dynamic check for deceptive handle names (e.g. refund, customer care, support, electricity)
                 String lowerVpa = payeeVpa.toLowerCase();
-                if (lowerVpa.contains("refund") || lowerVpa.contains("cashback") || lowerVpa.contains("helpdesk") || lowerVpa.contains("customercare")) {
-                    flags.add("VPA handle incorporates deceptive support/refund impersonation keywords");
-                    threatScore += 40;
+                List<com.authentica.model.HeuristicRule> qrRules = ruleRepository.findByCategoryAndIsActiveTrue(com.authentica.model.enums.RuleCategory.QR_DECEPTIVE);
+                for (com.authentica.model.HeuristicRule rule : qrRules) {
+                    if (lowerVpa.contains(rule.getPattern().toLowerCase())) {
+                        flags.add(rule.getDescription() != null ? rule.getDescription() : "VPA handle incorporates deceptive impersonation keyword: '" + rule.getPattern() + "'");
+                        threatScore += rule.getWeight();
+                        break;
+                    }
                 }
             }
 

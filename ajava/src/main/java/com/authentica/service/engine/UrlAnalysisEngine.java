@@ -1,14 +1,16 @@
 package com.authentica.service.engine;
 
+import com.authentica.model.HeuristicRule;
 import com.authentica.model.enums.RiskLevel;
-import com.authentica.repository.FraudURLRepository;
-import com.authentica.repository.WhitelistRepository;
+import com.authentica.model.enums.RuleCategory;
 import com.authentica.model.enums.WhitelistType;
+import com.authentica.repository.FraudURLRepository;
+import com.authentica.repository.HeuristicRuleRepository;
+import com.authentica.repository.WhitelistRepository;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -17,23 +19,21 @@ public class UrlAnalysisEngine {
 
     private final FraudURLRepository fraudURLRepository;
     private final WhitelistRepository whitelistRepository;
-
-    private static final List<String> SUSPICIOUS_TLDS = Arrays.asList(
-            ".tk", ".ml", ".ga", ".cf", ".gq", ".xyz", ".top", ".buzz", ".work", ".click", ".fit", ".casa"
-    );
-
-    private static final List<String> PHISHING_KEYWORDS = Arrays.asList(
-            "kyc", "sbi", "hdfc", "icici", "pnb", "paytm", "phonepe", "bank", "secure", "login",
-            "verify", "blocked", "update-pan", "refund", "lottery", "gift", "electricity-bill", "bonus"
-    );
+    private final HeuristicRuleRepository ruleRepository;
+    private final com.authentica.service.OutboundProbeService outboundProbeService;
 
     private static final Pattern IP_URL_PATTERN = Pattern.compile(
             "^(http|https)://(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).*"
     );
 
-    public UrlAnalysisEngine(FraudURLRepository fraudURLRepository, WhitelistRepository whitelistRepository) {
+    public UrlAnalysisEngine(FraudURLRepository fraudURLRepository,
+                             WhitelistRepository whitelistRepository,
+                             HeuristicRuleRepository ruleRepository,
+                             com.authentica.service.OutboundProbeService outboundProbeService) {
         this.fraudURLRepository = fraudURLRepository;
         this.whitelistRepository = whitelistRepository;
+        this.ruleRepository = ruleRepository;
+        this.outboundProbeService = outboundProbeService;
     }
 
     public EngineResult analyze(String url) {
@@ -78,23 +78,25 @@ public class UrlAnalysisEngine {
             threatScore += 35;
         }
 
-        // 4. Suspicious TLD check
-        for (String tld : SUSPICIOUS_TLDS) {
-            if (host.endsWith(tld)) {
-                flags.add("Domain uses high-abuse top-level domain (" + tld + ")");
-                threatScore += 25;
+        // 4. Dynamic Suspicious TLD check from Database
+        List<HeuristicRule> tldRules = ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.SUSPICIOUS_TLD);
+        for (HeuristicRule rule : tldRules) {
+            if (host.endsWith(rule.getPattern().toLowerCase())) {
+                flags.add(rule.getDescription() != null ? rule.getDescription() : "Domain uses high-abuse top-level domain (" + rule.getPattern() + ")");
+                threatScore += rule.getWeight();
                 break;
             }
         }
 
-        // 5. Phishing keywords in domain / path
+        // 5. Dynamic Phishing keywords from Database
+        List<HeuristicRule> keywordRules = ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.URL_KEYWORD);
         int keywordMatches = 0;
-        for (String keyword : PHISHING_KEYWORDS) {
-            if (cleanedUrl.contains(keyword)) {
+        for (HeuristicRule rule : keywordRules) {
+            if (cleanedUrl.contains(rule.getPattern().toLowerCase())) {
                 keywordMatches++;
-                flags.add("Detected security lure keyword: '" + keyword + "'");
-                threatScore += 15;
-                if (keywordMatches >= 3) break;
+                flags.add(rule.getDescription() != null ? rule.getDescription() : "Detected security lure keyword: '" + rule.getPattern() + "'");
+                threatScore += rule.getWeight();
+                if (keywordMatches >= 4) break;
             }
         }
 
@@ -109,6 +111,19 @@ public class UrlAnalysisEngine {
         if (!cleanedUrl.startsWith("https://")) {
             flags.add("Connection is unencrypted (HTTP), lacking standard SSL/TLS certification");
             threatScore += 10;
+        }
+
+        // 8. Live Sandbox SSL Probe & VirusTotal Threat Intelligence
+        try {
+            com.authentica.service.OutboundProbeService.ProbeResult probeResult = outboundProbeService.probe(cleanedUrl, host);
+            if (probeResult != null) {
+                if (probeResult.getFlags() != null && !probeResult.getFlags().isEmpty()) {
+                    flags.addAll(probeResult.getFlags());
+                }
+                threatScore += probeResult.getThreatScorePenalty();
+            }
+        } catch (Exception e) {
+            // Non-blocking fallback
         }
 
         threatScore = Math.min(100, threatScore);

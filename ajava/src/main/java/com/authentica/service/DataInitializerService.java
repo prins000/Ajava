@@ -19,6 +19,10 @@ public class DataInitializerService implements CommandLineRunner {
     private final CommunityReportRepository communityReportRepository;
     private final WhitelistRepository whitelistRepository;
     private final AppSettingsRepository settingsRepository;
+    private final FeedbackRepository feedbackRepository;
+    private final ProtectedContactRepository contactRepository;
+    private final SupportTicketRepository ticketRepository;
+    private final HeuristicRuleRepository heuristicRuleRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializerService(UserRepository userRepository,
@@ -28,6 +32,10 @@ public class DataInitializerService implements CommandLineRunner {
                                   CommunityReportRepository communityReportRepository,
                                   WhitelistRepository whitelistRepository,
                                   AppSettingsRepository settingsRepository,
+                                  FeedbackRepository feedbackRepository,
+                                  ProtectedContactRepository contactRepository,
+                                  SupportTicketRepository ticketRepository,
+                                  HeuristicRuleRepository heuristicRuleRepository,
                                   PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.fraudNumberRepository = fraudNumberRepository;
@@ -36,6 +44,10 @@ public class DataInitializerService implements CommandLineRunner {
         this.communityReportRepository = communityReportRepository;
         this.whitelistRepository = whitelistRepository;
         this.settingsRepository = settingsRepository;
+        this.feedbackRepository = feedbackRepository;
+        this.contactRepository = contactRepository;
+        this.ticketRepository = ticketRepository;
+        this.heuristicRuleRepository = heuristicRuleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -46,6 +58,8 @@ public class DataInitializerService implements CommandLineRunner {
         seedFraudIntelligence();
         seedCommunityReports();
         seedSettings();
+        seedSupportAndFeedback();
+        seedDynamicRules();
     }
 
     private void seedUsers() {
@@ -155,6 +169,112 @@ public class DataInitializerService implements CommandLineRunner {
             settingsRepository.save(new AppSettings("system.version", "2.4.0-ENTERPRISE", "Platform version", "system"));
             settingsRepository.save(new AppSettings("threat.auto_verify_upvotes", "5", "Upvote threshold for auto-verifying community reports", "threat_intel"));
             settingsRepository.save(new AppSettings("analysis.cache_enabled", "true", "Enable memory caching for threat reputation lookups", "performance"));
+        }
+    }
+
+    private void seedSupportAndFeedback() {
+        if (ticketRepository.count() == 0) {
+            SupportTicket t1 = new SupportTicket(
+                    null,
+                    "aarav.sharma@example.com",
+                    "Suspicious Collect Request on Google Pay",
+                    "Received a collect request of Rs 4,999 under note 'claim cashback'. The QR scanner flagged it as deceptive.",
+                    TicketPriority.HIGH
+            );
+            ticketRepository.save(t1);
+        }
+
+        if (feedbackRepository.count() == 0) {
+            Feedback f1 = new Feedback(
+                    null,
+                    "user@authentica.io",
+                    "detection",
+                    5,
+                    "Urgency heuristic engine immediately flagged the fake electricity disconnection SMS. Very helpful!"
+            );
+            feedbackRepository.save(f1);
+        }
+
+        userRepository.findByEmail("user@authentica.io").ifPresent(user -> {
+            if (contactRepository.findByUserId(user.getId()).isEmpty()) {
+                contactRepository.save(new ProtectedContact(user.getId(), "Ramesh Sharma (Father)", "+919876500001", "Father"));
+                contactRepository.save(new ProtectedContact(user.getId(), "Sunita Sharma (Mother)", "+919876500002", "Mother"));
+            }
+        });
+    }
+
+    private void seedDynamicRules() {
+        if (heuristicRuleRepository.count() == 0) {
+            // URL Keywords
+            String[] urlKeywords = {
+                    "kyc", "sbi", "hdfc", "icici", "pnb", "paytm", "phonepe", "bank", "secure", "login",
+                    "verify", "blocked", "update-pan", "refund", "lottery", "gift", "electricity-bill", "bonus",
+                    "netflix", "crypto", "binance", "amazon-gift", "part-time-job", "task-earn", "telegram-vip",
+                    "disconnection", "unblock", "aadhaar", "free-recharge"
+            };
+            for (String kw : urlKeywords) {
+                heuristicRuleRepository.save(new HeuristicRule(RuleCategory.URL_KEYWORD, kw, 15, "Security lure keyword detected: '" + kw + "'"));
+            }
+
+            // Suspicious TLDs
+            String[] tlds = {
+                    ".tk", ".ml", ".ga", ".cf", ".gq", ".xyz", ".top", ".buzz", ".work", ".click", ".fit", ".casa", ".monster", ".icu"
+            };
+            for (String tld : tlds) {
+                heuristicRuleRepository.save(new HeuristicRule(RuleCategory.SUSPICIOUS_TLD, tld, 25, "High-abuse top-level domain extension: " + tld));
+            }
+
+            // SMS Urgency Triggers
+            String[] urgency = {
+                    "immediate action", "within 24 hours", "account blocked", "card suspended",
+                    "electricity will be disconnected", "tonight 9:30 pm", "urgent notice", "last warning",
+                    "deactivated immediately", "legal action", "arrest warrant", "final notice", "cut supply",
+                    "sim blocked", "services terminated"
+            };
+            for (String u : urgency) {
+                heuristicRuleRepository.save(new HeuristicRule(RuleCategory.SMS_URGENCY, u, 25, "Psychological urgency pressure tactic: '" + u + "'"));
+            }
+
+            // SMS Financial Lures
+            String[] lures = {
+                    "won lottery", "cashback of rs", "congratulations you won", "reward points expired",
+                    "pre-approved loan", "claim bonus", "free gift", "transfer rs", "credited to your account",
+                    "work from home daily 5000", "review hotels earn", "youtube like and earn", "task bonus"
+            };
+            for (String l : lures) {
+                heuristicRuleRepository.save(new HeuristicRule(RuleCategory.SMS_FINANCIAL_LURE, l, 25, "Deceptive financial reward lure: '" + l + "'"));
+            }
+
+            // SMS Credential Traps
+            String[] traps = {
+                    "click link to update kyc", "pan card update", "share otp", "enter your pin",
+                    "download apk", "install anydesk", "install teamviewer", "verify aadhar",
+                    "update bank details", "send debit card details", "install quicksupport", "update apk", "install rustdesk"
+            };
+            for (String tr : traps) {
+                heuristicRuleRepository.save(new HeuristicRule(RuleCategory.SMS_CREDENTIAL_TRAP, tr, 35, "Malicious remote access or credential harvest trap: '" + tr + "'"));
+            }
+
+            // Voice Extortion / Digital Arrest
+            String[] voice = {
+                    "police department", "customs narcotics", "digital arrest", "parcel confiscated",
+                    "illegal passport found", "cbi officer", "crime branch", "arrest warrant",
+                    "remain on video call", "do not disconnect", "transfer bail amount to rbi verification account",
+                    "enforcement directorate", "trai telecom disconnection", "anti money laundering cell",
+                    "supreme court warrant", "narcotics control bureau"
+            };
+            for (String v : voice) {
+                heuristicRuleRepository.save(new HeuristicRule(RuleCategory.VOICE_EXTORTION, v, 35, "Coercive digital arrest / state officer impersonation marker: '" + v + "'"));
+            }
+
+            // QR / UPI Deceptive Markers
+            String[] qr = {
+                    "refund", "cashback", "customer care", "support desk", "rbi verification",
+                    "electricity bill", "bonus cash", "lottery claim", "helpdesk", "account unlock"
+            };
+            for (String q : qr) {
+                heuristicRuleRepository.save(new HeuristicRule(RuleCategory.QR_DECEPTIVE, q, 35, "Deceptive merchant name masking reverse collect request: '" + q + "'"));
+            }
         }
     }
 }

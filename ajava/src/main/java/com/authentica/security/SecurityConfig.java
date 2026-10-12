@@ -64,7 +64,11 @@ public class SecurityConfig {
                                 "/api/v1/community/feed",
                                 "/api/v1/community/reports/**",
                                 "/api/v1/analysis/scan-public",
-                                "/api/v1/stats/public"
+                                "/api/v1/analysis/scan-voice-file",
+                                "/api/v1/media/**",
+                                "/api/v1/stats/public",
+                                "/api/v1/feedback",
+                                "/api/v1/tickets"
                         ).permitAll()
                         // Admin-only endpoints
                         .requestMatchers("/api/v1/admin/**").hasAuthority("ROLE_ADMIN")

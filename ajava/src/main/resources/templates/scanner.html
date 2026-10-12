@@ -38,11 +38,11 @@
       <div class="card">
         <!-- Engine tabs -->
         <div class="tab-strip" id="engineTabStrip">
-          <button class="tab-btn active" id="tab-URL"   onclick="selectEngine('URL',   this)">URL / Link</button>
-          <button class="tab-btn"        id="tab-TEXT"  onclick="selectEngine('TEXT',  this)">SMS / Message</button>
-          <button class="tab-btn"        id="tab-QR"    onclick="selectEngine('QR',    this)">QR / UPI</button>
-          <button class="tab-btn"        id="tab-PHONE" onclick="selectEngine('PHONE', this)">Phone</button>
-          <button class="tab-btn"        id="tab-VOICE" onclick="selectEngine('VOICE', this)">Voice Transcript</button>
+          <button class="tab-btn active" id="tab-URL"   onclick="selectEngine('URL',   this)">🔗 URL / Link</button>
+          <button class="tab-btn"        id="tab-TEXT"  onclick="selectEngine('TEXT',  this)">💬 SMS / Message</button>
+          <button class="tab-btn"        id="tab-QR"    onclick="selectEngine('QR',    this)">📷 QR / UPI (Photo Upload)</button>
+          <button class="tab-btn"        id="tab-PHONE" onclick="selectEngine('PHONE', this)">📞 Phone</button>
+          <button class="tab-btn"        id="tab-VOICE" onclick="selectEngine('VOICE', this)">🎙️ Voice AI (Audio Upload)</button>
         </div>
 
         <!-- Engine 1: URL -->
@@ -78,6 +78,18 @@
 
         <!-- Engine 3: QR/UPI -->
         <div id="panel-QR" class="engine-panel">
+          <!-- Real QR Code Image Drag & Drop Uploader -->
+          <div id="qrDropZone" style="border:2px dashed var(--col-brand, #3b82f6);border-radius:var(--rad-md);padding:var(--sp-4);text-align:center;background:var(--col-surface-2, #f8fafc);cursor:pointer;margin-bottom:var(--sp-4);transition:all 0.2s ease;">
+            <div style="font-size:32px;margin-bottom:var(--sp-2);">📷</div>
+            <div style="font-weight:var(--fw-semi);color:var(--col-ink);font-size:var(--text-sm);">Drop QR Code Screenshot Here or Click to Upload</div>
+            <div class="text-muted" style="font-size:var(--text-xs);margin-top:4px;">Upload WhatsApp, Telegram, or Payment QR screenshot (.png, .jpg) to decode with Computer Vision</div>
+            <input type="file" id="qrFileInput" accept="image/*" style="display:none;" onchange="handleQrFileSelect(this.files)">
+          </div>
+          <div id="qrImagePreviewContainer" style="display:none;margin-bottom:var(--sp-3);text-align:center;">
+            <img id="qrPreviewImg" style="max-height:160px;border-radius:var(--rad-sm);box-shadow:0 2px 8px rgba(0,0,0,0.1);border:1px solid var(--col-border);">
+            <div id="qrDecodeStatus" style="font-size:var(--text-xs);margin-top:4px;font-weight:var(--fw-semi);"></div>
+          </div>
+
           <div class="form-group">
             <label class="form-label" for="qrInput">Decoded QR content or UPI URI</label>
             <input type="text" id="qrInput" class="form-control" placeholder="upi://pay?pa=refund-desk@ybl&amp;pn=QuickRefundHelpdesk&amp;am=5000">
@@ -104,9 +116,27 @@
 
         <!-- Engine 5: VOICE -->
         <div id="panel-VOICE" class="engine-panel">
-          <div class="form-group">
-            <label class="form-label" for="voiceTranscriptInput">Call transcript</label>
-            <textarea id="voiceTranscriptInput" class="form-control" placeholder="Paste the transcribed text from the suspicious call…"></textarea>
+          <!-- Real Audio File Upload for Groq Whisper Speech-to-Text -->
+          <div id="voiceDropZone" style="border:2px dashed #8b5cf6;border-radius:var(--rad-md);padding:var(--sp-4);text-align:center;background:var(--col-surface-2, #f8fafc);cursor:pointer;margin-bottom:var(--sp-4);transition:all 0.2s ease;">
+            <div style="font-size:32px;margin-bottom:var(--sp-2);">🎙️</div>
+            <div style="font-weight:var(--fw-semi);color:var(--col-ink);font-size:var(--text-sm);">Upload Audio Call Recording (.mp3, .wav, .m4a)</div>
+            <div class="text-muted" style="font-size:var(--text-xs);margin-top:4px;">High-speed AI Speech-to-Text transcription powered by Groq Whisper AI</div>
+            <input type="file" id="voiceFileInput" accept="audio/*" style="display:none;" onchange="handleVoiceFileSelect(this.files)">
+          </div>
+
+          <div id="voiceAudioPreviewContainer" style="display:none;margin-bottom:var(--sp-3);">
+            <audio id="voiceAudioPlayer" controls style="width:100%;height:38px;"></audio>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--sp-2);">
+              <span id="voiceFileName" style="font-size:var(--text-xs);color:var(--col-muted);"></span>
+              <button class="btn btn-primary btn-sm" id="btnGroqTranscribe" onclick="executeGroqAudioScan()" style="background:#7c3aed;border-color:#7c3aed;">
+                ⚡ Transcribe &amp; Detect Extortion (Groq AI)
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:var(--sp-3);">
+            <label class="form-label" for="voiceTranscriptInput">Call transcript (Text)</label>
+            <textarea id="voiceTranscriptInput" class="form-control" placeholder="Or paste manually transcribed text from the suspicious call…"></textarea>
           </div>
           <div class="form-group">
             <label class="form-label" for="voiceDurationInput">Call duration (seconds)</label>
@@ -138,9 +168,168 @@
     </div>
   </footer>
 
+  <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="/js/app.js"></script>
   <script>
     let activeEngine = 'URL';
+    let selectedVoiceFile = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initDropZones();
+    });
+
+    function initDropZones() {
+      // QR Drop Zone
+      const qrZone = document.getElementById('qrDropZone');
+      if (qrZone) {
+        qrZone.addEventListener('click', () => document.getElementById('qrFileInput').click());
+        ['dragenter', 'dragover'].forEach(name => {
+          qrZone.addEventListener(name, (e) => { e.preventDefault(); qrZone.style.borderColor = '#1d4ed8'; qrZone.style.background = '#eff6ff'; });
+        });
+        ['dragleave', 'drop'].forEach(name => {
+          qrZone.addEventListener(name, (e) => { e.preventDefault(); qrZone.style.borderColor = 'var(--col-brand, #3b82f6)'; qrZone.style.background = 'var(--col-surface-2, #f8fafc)'; });
+        });
+        qrZone.addEventListener('drop', (e) => {
+          if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+            handleQrFileSelect(e.dataTransfer.files);
+          }
+        });
+      }
+
+      // Voice Drop Zone
+      const voiceZone = document.getElementById('voiceDropZone');
+      if (voiceZone) {
+        voiceZone.addEventListener('click', () => document.getElementById('voiceFileInput').click());
+        ['dragenter', 'dragover'].forEach(name => {
+          voiceZone.addEventListener(name, (e) => { e.preventDefault(); voiceZone.style.borderColor = '#6d28d9'; voiceZone.style.background = '#f5f3ff'; });
+        });
+        ['dragleave', 'drop'].forEach(name => {
+          voiceZone.addEventListener(name, (e) => { e.preventDefault(); voiceZone.style.borderColor = '#8b5cf6'; voiceZone.style.background = 'var(--col-surface-2, #f8fafc)'; });
+        });
+        voiceZone.addEventListener('drop', (e) => {
+          if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+            handleVoiceFileSelect(e.dataTransfer.files);
+          }
+        });
+      }
+    }
+
+    async function handleQrFileSelect(files) {
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      const preview = document.getElementById('qrPreviewImg');
+      const container = document.getElementById('qrImagePreviewContainer');
+      const status = document.getElementById('qrDecodeStatus');
+
+      container.style.display = 'block';
+      status.style.color = 'var(--col-muted)';
+      status.textContent = 'Analyzing image with Computer Vision...';
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        preview.src = e.target.result;
+        preview.onload = async () => {
+          try {
+            const codeReader = new ZXing.BrowserQRCodeReader();
+            const result = await codeReader.decodeFromImageElement(preview);
+            if (result && result.text) {
+              document.getElementById('qrInput').value = result.text;
+              status.style.color = 'var(--col-safe, #10b981)';
+              status.textContent = `✅ QR Decoded: ${result.text}`;
+              showAlert('QR code decoded successfully! Executing threat scan...', 'safe');
+
+              // Asynchronously upload image to Cloudinary evidence store
+              uploadEvidenceToCloudinary(file);
+
+              // Automatically trigger analysis
+              executeStudioScan();
+            }
+          } catch (err) {
+            status.style.color = 'var(--col-warn, #f59e0b)';
+            status.textContent = 'Could not find a standard QR matrix in this image. You can still paste or edit the text below.';
+          }
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function uploadEvidenceToCloudinary(file) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch(`${API_BASE}/media/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        const json = await res.json();
+        if (json.success && json.data && json.data.url) {
+          console.log('Evidence safely archived in Cloudinary:', json.data.url);
+        }
+      } catch (e) {
+        console.warn('Evidence upload notice:', e.message);
+      }
+    }
+
+    function handleVoiceFileSelect(files) {
+      if (!files || files.length === 0) return;
+      selectedVoiceFile = files[0];
+      const container = document.getElementById('voiceAudioPreviewContainer');
+      const player = document.getElementById('voiceAudioPlayer');
+      const nameEl = document.getElementById('voiceFileName');
+
+      container.style.display = 'block';
+      nameEl.textContent = `📁 ${selectedVoiceFile.name} (${Math.round(selectedVoiceFile.size / 1024)} KB)`;
+      player.src = URL.createObjectURL(selectedVoiceFile);
+      showAlert(`Audio recording '${selectedVoiceFile.name}' ready for AI transcription.`, 'safe');
+    }
+
+    async function executeGroqAudioScan() {
+      if (!selectedVoiceFile) {
+        showAlert('Please upload an audio recording file first.', 'warn');
+        return;
+      }
+
+      const btn = document.getElementById('btnGroqTranscribe');
+      const resultEl = document.getElementById('scanResult');
+      const duration = parseInt(document.getElementById('voiceDurationInput').value, 10) || 60;
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Transcribing with Groq Whisper AI…';
+      resultEl.innerHTML = '<div class="empty-state"><div class="skeleton" style="height:140px;border-radius:var(--r-lg);"></div><p style="margin-top:8px;">Transcribing high-fidelity speech using Groq Cloud AI and evaluating digital arrest extortion patterns…</p></div>';
+
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedVoiceFile);
+        formData.append('durationSeconds', duration);
+
+        const token = getToken();
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch(`${API_BASE}/analysis/scan-voice-file`, {
+          method: 'POST',
+          headers: headers,
+          body: formData
+        });
+
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message || 'Voice transcription failed.');
+
+        const data = json.data;
+        if (data.transcript) {
+          document.getElementById('voiceTranscriptInput').value = data.transcript;
+        }
+
+        showAlert('Groq Speech-to-Text completed & extortion evaluated!', 'safe');
+        renderScanResult(data);
+      } catch (err) {
+        resultEl.innerHTML = `<div class="alert alert-danger">${escHtml(err.message)}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⚡ Transcribe & Detect Extortion (Groq AI)';
+      }
+    }
 
     function selectEngine(type, btn) {
       activeEngine = type;
