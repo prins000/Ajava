@@ -123,7 +123,7 @@
           </div>
 
           <!-- Incident Moderation Queue -->
-          <div class="card" style="margin-bottom:var(--sp-6);">
+          <div class="card" style="margin-bottom:var(--sp-6);" id="reports">
             <div class="card-header">
               <span class="card-title">Community Incidents Moderation Queue</span>
             </div>
@@ -133,7 +133,7 @@
           </div>
 
           <!-- Registered Citizen Accounts -->
-          <div class="card" style="margin-bottom:var(--sp-6);">
+          <div class="card" style="margin-bottom:var(--sp-6);" id="users">
             <div class="card-header">
               <span class="card-title">Registered Citizen Accounts</span>
               <button class="btn btn-ghost btn-sm" onclick="loadAdminUsers()">Refresh</button>
@@ -144,7 +144,7 @@
           </div>
 
           <!-- Cyber Crime Incident Support Tickets Queue -->
-          <div class="card" style="margin-bottom:var(--sp-6);">
+          <div class="card" style="margin-bottom:var(--sp-6);" id="tickets">
             <div class="card-header">
               <span class="card-title">Citizen Incident Support Helpdesk Queue</span>
               <button class="btn btn-ghost btn-sm" onclick="loadAdminTickets()">Refresh</button>
@@ -155,7 +155,7 @@
           </div>
 
           <!-- Citizen Feedback & Detection Engine Ratings -->
-          <div class="card" style="margin-bottom:var(--sp-6);">
+          <div class="card" style="margin-bottom:var(--sp-6);" id="feedback">
             <div class="card-header">
               <span class="card-title">Citizen Platform Feedback &amp; Engine Ratings</span>
               <button class="btn btn-ghost btn-sm" onclick="loadAdminFeedback()">Refresh</button>
@@ -166,7 +166,7 @@
           </div>
 
           <!-- Dynamic Threat Detection Rules Engine (Zero Hardcoded Logic) -->
-          <div class="card" style="margin-bottom:var(--sp-6);">
+          <div class="card" style="margin-bottom:var(--sp-6);" id="rules">
             <div class="card-header" style="flex-wrap:wrap;gap:var(--sp-2);">
               <div>
                 <span class="card-title">Dynamic Threat Detection Rules Console</span>
@@ -275,12 +275,17 @@
       if (barrier) barrier.style.display = 'none';
       if (content) content.style.display = 'block';
 
-      loadAdminMetrics();
-      loadAdminReports();
-      loadAdminUsers();
-      loadAdminTickets();
-      loadAdminFeedback();
-      loadAdminRules();
+      await Promise.allSettled([
+        loadAdminMetrics(),
+        loadAdminReports(),
+        loadAdminUsers(),
+        loadAdminTickets(),
+        loadAdminFeedback(),
+        loadAdminRules()
+      ]);
+      if (window.location.hash && typeof handleHashNavigation === 'function') {
+        setTimeout(handleHashNavigation, 100);
+      }
     }
 
     async function loginDemoAdmin() {

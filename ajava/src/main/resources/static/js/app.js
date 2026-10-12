@@ -149,6 +149,7 @@ function refreshNavAuth() {
   const sidebarNav = document.querySelector('.sidebar-nav');
   const sidebarCat = document.querySelector('.sidebar-category');
   const sidebarNode = document.querySelector('.sidebar-node-pill');
+  const hash = window.location.hash;
 
   if (sidebarNav) {
     if (user && user.role === 'ROLE_ADMIN') {
@@ -157,7 +158,7 @@ function refreshNavAuth() {
         sidebarNode.innerHTML = `<span>Cluster-EU-West</span><span class="node-status" style="color:#ef4444;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ef4444;box-shadow:0 0 6px #ef4444;margin-right:4px;"></span>Admin Mode</span>`;
       }
       sidebarNav.innerHTML = `
-        <a href="/dashboard" class="sidebar-link ${pathname === '/dashboard' ? 'active' : ''}">
+        <a href="/dashboard" class="sidebar-link ${pathname === '/dashboard' && !hash ? 'active' : ''}">
           <span class="sidebar-link-icon">⊞</span> SecOps Console
         </a>
         <a href="/scanner" class="sidebar-link ${pathname === '/scanner' ? 'active' : ''}">
@@ -166,16 +167,16 @@ function refreshNavAuth() {
         <a href="/community" class="sidebar-link ${pathname === '/community' ? 'active' : ''}">
           <span class="sidebar-link-icon">⚡</span> Threat Radar
         </a>
-        <a href="/admin" class="sidebar-link ${pathname === '/admin' ? 'active' : ''}">
+        <a href="/admin#rules" class="sidebar-link ${pathname === '/admin' && (hash === '#rules' || !hash) ? 'active' : ''}">
           <span class="sidebar-link-icon">🛡️</span> Rule Engine &amp; Policies
         </a>
-        <a href="/admin#users" class="sidebar-link">
+        <a href="/admin#users" class="sidebar-link ${pathname === '/admin' && hash === '#users' ? 'active' : ''}">
           <span class="sidebar-link-icon">👥</span> Citizen Directory
         </a>
-        <a href="/admin#reports" class="sidebar-link">
+        <a href="/admin#reports" class="sidebar-link ${pathname === '/admin' && hash === '#reports' ? 'active' : ''}">
           <span class="sidebar-link-icon">📋</span> Incident Moderation
         </a>
-        <a href="/admin#tickets" class="sidebar-link">
+        <a href="/admin#tickets" class="sidebar-link ${pathname === '/admin' && hash === '#tickets' ? 'active' : ''}">
           <span class="sidebar-link-icon">🎫</span> Helpdesk Queue
         </a>
       `;
@@ -185,7 +186,7 @@ function refreshNavAuth() {
         sidebarNode.innerHTML = `<span>Cluster-EU-West</span><span class="node-status">Protected</span>`;
       }
       sidebarNav.innerHTML = `
-        <a href="/dashboard" class="sidebar-link ${pathname === '/dashboard' ? 'active' : ''}">
+        <a href="/dashboard" class="sidebar-link ${pathname === '/dashboard' && !hash ? 'active' : ''}">
           <span class="sidebar-link-icon">⊞</span> My Dashboard
         </a>
         <a href="/scanner" class="sidebar-link ${pathname === '/scanner' ? 'active' : ''}">
@@ -194,13 +195,13 @@ function refreshNavAuth() {
         <a href="/community" class="sidebar-link ${pathname === '/community' ? 'active' : ''}">
           <span class="sidebar-link-icon">⚡</span> Threat Radar Feed
         </a>
-        <a href="/dashboard#contacts" class="sidebar-link">
+        <a href="/dashboard#contacts" class="sidebar-link ${pathname === '/dashboard' && hash === '#contacts' ? 'active' : ''}">
           <span class="sidebar-link-icon">🛡️</span> Family Shield
         </a>
-        <a href="/dashboard#tickets" class="sidebar-link">
+        <a href="/dashboard#tickets" class="sidebar-link ${pathname === '/dashboard' && hash === '#tickets' ? 'active' : ''}">
           <span class="sidebar-link-icon">🎫</span> Lodge Incident
         </a>
-        <a href="/dashboard#history" class="sidebar-link">
+        <a href="/dashboard#history" class="sidebar-link ${pathname === '/dashboard' && hash === '#history' ? 'active' : ''}">
           <span class="sidebar-link-icon">🔐</span> Forensic FIR Vault
         </a>
       `;
@@ -226,6 +227,53 @@ function refreshNavAuth() {
     }
   }
 }
+
+function handleHashNavigation() {
+  const hash = window.location.hash;
+  if (!hash) return;
+  const target = document.querySelector(hash);
+  if (target) {
+    const yOffset = -75;
+    const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    target.style.transition = 'box-shadow 0.4s ease, border-color 0.4s ease';
+    target.style.boxShadow = '0 0 0 2px rgba(255, 77, 0, 0.7)';
+    target.style.borderColor = 'rgba(255, 77, 0, 0.9)';
+    setTimeout(() => {
+      target.style.boxShadow = '';
+      target.style.borderColor = '';
+    }, 2200);
+  }
+  updateSidebarActiveHash();
+}
+
+function updateSidebarActiveHash() {
+  const hash = window.location.hash;
+  const currentPath = window.location.pathname;
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    const href = link.getAttribute('href');
+    if (!href) return;
+    if (hash && href.endsWith(hash)) {
+      link.classList.add('active');
+    } else if (!hash && href === currentPath) {
+      link.classList.add('active');
+    } else if (hash && href === currentPath) {
+      link.classList.remove('active');
+    } else if (!hash && href.includes('#')) {
+      link.classList.remove('active');
+    }
+  });
+}
+
+window.addEventListener('hashchange', () => {
+  handleHashNavigation();
+  updateSidebarActiveHash();
+});
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.location.hash) {
+    setTimeout(handleHashNavigation, 250);
+  }
+});
 
 // ── Auth Modal (Login & Register) ────────────────────────────
 function initAuthModal() {
