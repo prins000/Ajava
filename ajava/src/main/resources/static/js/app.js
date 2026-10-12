@@ -291,21 +291,35 @@ function toggleSidebar(forceState) {
   }
 
   const isMobile = window.innerWidth <= 992;
+  const toggleBtns = document.querySelectorAll('.topbar-toggle-btn');
+
   if (isMobile) {
     const shouldOpen = forceState !== undefined ? forceState : !sb.classList.contains('open');
     if (shouldOpen) {
       sb.classList.add('open');
       backdrop.classList.add('active');
       document.body.style.overflow = 'hidden';
+      toggleBtns.forEach(btn => {
+        btn.innerHTML = '&times;';
+        btn.setAttribute('aria-label', 'Close navigation');
+      });
     } else {
       sb.classList.remove('open');
       backdrop.classList.remove('active');
       document.body.style.overflow = '';
+      toggleBtns.forEach(btn => {
+        btn.innerHTML = '&#9776;';
+        btn.setAttribute('aria-label', 'Open navigation');
+      });
     }
   } else {
     // Desktop: collapse / expand
     if (shell) {
-      shell.classList.toggle('sidebar-collapsed');
+      const isCollapsed = shell.classList.toggle('sidebar-collapsed');
+      toggleBtns.forEach(btn => {
+        btn.innerHTML = isCollapsed ? '&#9776;' : '&times;';
+        btn.setAttribute('aria-label', isCollapsed ? 'Open navigation' : 'Close navigation');
+      });
     }
   }
 }

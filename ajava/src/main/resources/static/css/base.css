@@ -135,7 +135,15 @@ main {
   user-select: none;
 }
 
-/* Brand header with glowing orange dot */
+/* Brand header row with glowing dot and mobile close button */
+.sidebar-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: var(--sp-6);
+  padding: 0 2px;
+}
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -146,8 +154,35 @@ main {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   text-decoration: none;
-  margin-bottom: var(--sp-6);
-  padding: 0 4px;
+  margin-bottom: 0;
+  padding: 0;
+}
+.sidebar-close-btn {
+  background: transparent;
+  border: 1px solid var(--col-border);
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 19px;
+  line-height: 1;
+  transition: all 0.18s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+.sidebar-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--col-border-hover);
+  color: #ffffff;
+}
+@media (max-width: 992px) {
+  .sidebar-close-btn {
+    display: inline-flex;
+  }
 }
 .sidebar-brand:hover {
   text-decoration: none;

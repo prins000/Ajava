@@ -13,10 +13,13 @@
   <div class="app-shell">
     <!-- ── Left Sidebar (Cyber SOC Theme matching screenshot) ── -->
     <aside class="app-sidebar" id="appSidebar">
-      <a href="/" class="sidebar-brand">
-        <span class="sidebar-brand-dot"></span>
-        AUTHENTICA <span class="brand-sub">SECURE</span>
-      </a>
+      <div class="sidebar-header-row">
+        <a href="/" class="sidebar-brand">
+          <span class="sidebar-brand-dot"></span>
+          AUTHENTICA <span class="brand-sub">SECURE</span>
+        </a>
+        <button class="sidebar-close-btn" onclick="toggleSidebar(false)" aria-label="Close navigation">&times;</button>
+      </div>
 
       <a href="/scanner" class="sidebar-cta-btn">
         <span>New Operation</span>
