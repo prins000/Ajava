@@ -56,6 +56,11 @@ public class ProtectedContactController {
         }
 
         ProtectedContact contact = new ProtectedContact(user.getId(), contactName.trim(), phoneNumber.trim(), relationship);
+        String email = (String) body.get("email");
+        if (email != null && !email.trim().isEmpty()) {
+            contact.setEmail(email.trim());
+        }
+        contact.setIsAlertEnabled(true);
         ProtectedContact saved = contactRepository.save(contact);
         return ResponseEntity.ok(ApiResponse.success("Protected family contact registered.", saved));
     }

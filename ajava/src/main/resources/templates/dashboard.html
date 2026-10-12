@@ -174,6 +174,10 @@
           <input type="tel" id="contactPhoneInput" class="form-control" placeholder="+91 98765 00001" required>
         </div>
         <div class="form-group">
+          <label class="form-label" for="contactEmailInput">Email Address <span class="text-muted" style="font-weight:normal;">(for emergency alerts)</span></label>
+          <input type="email" id="contactEmailInput" class="form-control" placeholder="relative@gmail.com">
+        </div>
+        <div class="form-group">
           <label class="form-label" for="contactRelInput">Relationship</label>
           <select id="contactRelInput" class="form-control">
             <option value="Father">Father</option>
@@ -480,9 +484,10 @@
                     <span class="badge badge-neutral">${escHtml(c.relationship || 'Family')}</span>
                     <span class="badge ${c.isAlertEnabled ? 'badge-safe' : 'badge-warn'}">${c.isAlertEnabled ? '🛡️ Alert Active' : 'Muted'}</span>
                   </div>
-                  <code class="target-display" style="font-size:var(--text-xs);margin-top:var(--sp-1);">${escHtml(c.phoneNumber)}</code>
+                  <code class="target-display" style="font-size:var(--text-xs);margin-top:var(--sp-1);">${escHtml(c.phoneNumber)}${c.email ? ' · ' + escHtml(c.email) : ''}</code>
                 </div>
-                <div style="display:flex;gap:var(--sp-2);">
+                <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;">
+                  <button class="btn btn-outline btn-sm" style="border-color:var(--col-danger);color:var(--col-danger);" onclick="dispatchSosAlert(${c.id}, '${escHtml(c.contactName)}')">🚨 Dispatch SOS</button>
                   <button class="btn btn-outline btn-sm" onclick="toggleContactAlert(${c.id})">${c.isAlertEnabled ? 'Mute' : 'Activate'}</button>
                   <button class="btn btn-ghost btn-sm" style="color:var(--col-danger);" onclick="deleteContact(${c.id})">&times;</button>
                 </div>
@@ -498,6 +503,7 @@
     async function submitAddContact() {
       const contactName = document.getElementById('contactNameInput').value.trim();
       const phoneNumber = document.getElementById('contactPhoneInput').value.trim();
+      const email = document.getElementById('contactEmailInput') ? document.getElementById('contactEmailInput').value.trim() : null;
       const relationship = document.getElementById('contactRelInput').value;
 
       if (!contactName || !phoneNumber) {
@@ -508,15 +514,32 @@
       try {
         await apiFetch('/contacts', {
           method: 'POST',
-          body: JSON.stringify({ contactName, phoneNumber, relationship })
+          body: JSON.stringify({ contactName, phoneNumber, email, relationship })
         });
         showAlert('Family member added to Cyber Shield.', 'safe');
         closeModal('addContactModal');
         document.getElementById('contactNameInput').value = '';
         document.getElementById('contactPhoneInput').value = '';
+        if (document.getElementById('contactEmailInput')) document.getElementById('contactEmailInput').value = '';
         loadProtectedContacts();
       } catch (e) {
         showAlert(e.message, 'danger');
+      }
+    }
+
+    async function dispatchSosAlert(id, name) {
+      const notes = prompt(`Enter custom emergency message for ${name} (or leave blank for standard extortion alert):`, "Urgent: Potential digital arrest or cyber extortion attempt detected. Please disconnect calls from unknown officers and do not transfer funds.");
+      if (notes === null) return;
+
+      try {
+        showAlert(`Dispatching emergency SOS alert to ${name}...`, 'warn');
+        await apiFetch('/alerts/dispatch-sos', {
+          method: 'POST',
+          body: JSON.stringify({ contactId: id, notes })
+        });
+        showAlert(`🚨 Emergency Cyber Defense SOS sent to ${name} via Email & SMS Gateway!`, 'safe');
+      } catch (err) {
+        showAlert(err.message, 'danger');
       }
     }
 
