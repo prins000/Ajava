@@ -1,43 +1,52 @@
 /* ============================================================
-   AUTHENTICA — Design System Tokens
-   Single source of truth. No hex codes permitted outside here.
+   AUTHENTICA — Design System Tokens (Cyber SOC Dark Theme)
+   Deep matte obsidian aesthetic with electric cyber orange accent
+   Single source of truth for the entire Authentica application.
    ============================================================ */
 
 :root {
-  /* ── Colour ─────────────────────────────────────────────── */
-  --col-white:       #ffffff;
-  --col-bg:          #f7f8fa;
-  --col-surface:     #ffffff;
-  --col-border:      #e2e5ea;
-  --col-border-mid:  #cdd0d8;
+  /* ── Colour: Dark Obsidian Surface Palette ───────────────── */
+  --col-white:         #ffffff;
+  --col-bg:            #090b0e;        /* Deep matte black / obsidian */
+  --col-surface:       #12151c;        /* Elevated card surface */
+  --col-surface-2:     #171b24;        /* Secondary panel / inset */
+  --col-surface-3:     #1f2430;        /* Tertiary / hover surface */
+  --col-surface-glass: rgba(18, 21, 28, 0.92);
 
-  --col-ink:         #111827;        /* headings */
-  --col-body:        #374151;        /* body copy */
-  --col-muted:       #6b7280;        /* captions, meta */
-  --col-placeholder: #9ca3af;
+  --col-border:        #1f242e;        /* Subtle crisp borders */
+  --col-border-mid:    #2d3444;        /* Active/focused borders */
+  --col-border-glow:   rgba(255, 87, 34, 0.35);
 
-  --col-brand:       #1a56db;        /* primary blue */
-  --col-brand-hover: #1447c0;
-  --col-brand-light: #eff4ff;        /* tinted bg for brand elements */
+  --col-ink:           #ffffff;        /* Headings & primary typography */
+  --col-body:          #cbd5e1;        /* Crisp silver body copy */
+  --col-muted:         #7d899c;        /* Captions, labels, metadata */
+  --col-placeholder:   #505a6e;
 
-  --col-success:     #047857;
-  --col-success-bg:  #ecfdf5;
-  --col-success-bd:  #a7f3d0;
+  /* ── Cyber Orange Brand Accent (Matches Screenshot CTA) ───── */
+  --col-brand:         #ff5722;        /* High-impact neon security orange */
+  --col-brand-hover:   #f44336;
+  --col-brand-light:   rgba(255, 87, 34, 0.12);
+  --col-brand-glow:    0 0 20px rgba(255, 87, 34, 0.35);
 
-  --col-warn:        #b45309;
-  --col-warn-bg:     #fffbeb;
-  --col-warn-bd:     #fcd34d;
+  /* ── Security Indicators & Badges ────────────────────────── */
+  --col-success:       #10b981;        /* Safe / Active status */
+  --col-success-bg:    rgba(16, 185, 129, 0.12);
+  --col-success-bd:    rgba(16, 185, 129, 0.30);
 
-  --col-danger:      #b91c1c;
-  --col-danger-bg:   #fef2f2;
-  --col-danger-bd:   #fca5a5;
+  --col-warn:          #f59e0b;        /* Escalating / Suspicious */
+  --col-warn-bg:       rgba(245, 158, 11, 0.12);
+  --col-warn-bd:       rgba(245, 158, 11, 0.30);
 
-  --col-neutral:     #374151;
-  --col-neutral-bg:  #f3f4f6;
-  --col-neutral-bd:  #d1d5db;
+  --col-danger:        #ef4444;        /* Critical / Zero-Day Threat */
+  --col-danger-bg:     rgba(239, 68, 68, 0.14);
+  --col-danger-bd:     rgba(239, 68, 68, 0.35);
+
+  --col-neutral:       #94a3b8;
+  --col-neutral-bg:    #1b202a;
+  --col-neutral-bd:    #2a3242;
 
   /* ── Typography ─────────────────────────────────────────── */
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
 
   --text-xs:   0.75rem;    /* 12 px */
@@ -70,20 +79,21 @@
   --sp-16:  4rem;
 
   /* ── Radii ──────────────────────────────────────────────── */
-  --r-sm:   4px;
-  --r-md:   8px;
-  --r-lg:  12px;
-  --r-xl:  16px;
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   14px;
+  --r-xl:   18px;
   --r-full: 9999px;
 
   /* ── Shadow ─────────────────────────────────────────────── */
-  --shadow-xs: 0 1px 2px rgba(0,0,0,.06);
-  --shadow-sm: 0 1px 4px rgba(0,0,0,.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.10);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,.12);
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.7);
 
   /* ── Layout ─────────────────────────────────────────────── */
   --nav-h:      60px;
-  --content-w:  1100px;
-  --sidebar-w:  220px;
+  --content-w:  1340px;
+  --sidebar-w:  250px;
+  --topbar-h:   60px;
 }
