@@ -1,0 +1,27 @@
+# Compiled Java Class files
+*.class
+
+# Maven build outputs (equivalent to dist/ and build/ in MERN)
+target/
+ajava/target/
+**/target/
+
+# Package archives
+*.jar
+*.war
+*.ear
+
+# Log files
+*.log
+
+# IntelliJ IDEA / VS Code / Eclipse metadata
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# OS generated files
+Thumbs.db
+.DS_Store

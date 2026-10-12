@@ -51,6 +51,7 @@ public class SecurityConfig {
                                 "/scanner",
                                 "/community",
                                 "/admin",
+                                "/dashboard",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",

@@ -1,4 +1,0 @@
-/* Authentica — entry point. Imports the design system. */
-@import url("tokens.css");
-@import url("base.css");
-@import url("components.css");
