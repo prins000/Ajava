@@ -61,18 +61,59 @@
 
         <!-- Engine 2: TEXT -->
         <div id="panel-TEXT" class="engine-panel">
-          <div class="form-group">
-            <label class="form-label" for="textInput">Message body</label>
-            <textarea id="textInput" class="form-control" placeholder="Paste the suspicious SMS or message text here…"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="senderInput">Sender / Header (optional)</label>
-            <input type="text" id="senderInput" class="form-control" placeholder="+91 98765 43210 or BZ-SBIBNK">
-          </div>
-          <div class="sample-row">
-            <span class="sample-label">Examples:</span>
-            <button class="btn btn-ghost btn-sm" onclick="setVal('textInput','Dear consumer your electricity power will be disconnected tonight at 9:30 PM from power office because your previous month bill was not updated. Please immediately contact our electricity officer at 9876543210')">Electricity threat</button>
-            <button class="btn btn-ghost btn-sm" onclick="setVal('textInput','Your SBI netbanking will be blocked within 24 hours due to pending KYC. Click http://secure-sbi-update-kyc.com/login and update PAN card details.')">Banking KYC scam</button>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:var(--sp-6);align-items:start;">
+            <!-- Left: Input Controls -->
+            <div>
+              <div class="form-group">
+                <label class="form-label" for="textInput">Suspicious SMS / WhatsApp Message Body</label>
+                <textarea id="textInput" class="form-control" rows="5" placeholder="Paste the suspicious SMS, WhatsApp, or Telegram message here…" oninput="updatePayloadSimulator()"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="senderInput">Sender ID / Phone Number (optional)</label>
+                <input type="text" id="senderInput" class="form-control" placeholder="+91 98765 43210 or BZ-SBIBNK" oninput="updatePayloadSimulator()">
+              </div>
+              <div class="sample-row">
+                <span class="sample-label">Examples:</span>
+                <button class="btn btn-ghost btn-sm" onclick="setVal('textInput','Dear consumer your electricity power will be disconnected tonight at 9:30 PM from power office because your previous month bill was not updated. Please immediately contact our electricity officer at 9876543210'); updatePayloadSimulator();">Electricity threat</button>
+                <button class="btn btn-ghost btn-sm" onclick="setVal('textInput','Your SBI netbanking will be blocked within 24 hours due to pending KYC. Click http://secure-sbi-update-kyc.com/login and update PAN card details.'); updatePayloadSimulator();">Banking KYC scam</button>
+                <button class="btn btn-ghost btn-sm" onclick="setVal('textInput','Congratulations! Your mobile number won 25,00,000 INR lottery in KBC Lucky Draw. To claim contact Manager on WhatsApp 9820011223'); updatePayloadSimulator();">Lottery Lure</button>
+              </div>
+            </div>
+
+            <!-- Right: Interactive WhatsApp / SMS Scam Payload Simulator -->
+            <div style="background:var(--col-surface-2, #f8fafc);border:1px solid var(--col-border);border-radius:var(--r-md);padding:var(--sp-4);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-3);">
+                <span style="font-size:var(--text-xs);font-weight:var(--fw-bold);text-transform:uppercase;letter-spacing:0.05em;color:var(--col-muted);">📱 Interactive Payload Simulator</span>
+                <span id="simulatorBadge" class="badge badge-neutral" style="font-size:11px;">Real-Time Syntax</span>
+              </div>
+
+              <!-- Sleek Mobile Chat Frame -->
+              <div style="max-width:380px;margin:0 auto;background:#0b141a;border-radius:24px;border:6px solid #1e293b;box-shadow:0 12px 28px rgba(0,0,0,0.25);overflow:hidden;color:#e9edef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+                <!-- Header -->
+                <div style="background:#202c33;padding:10px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #2a3942;">
+                  <div style="width:34px;height:34px;border-radius:50%;background:#ef4444;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;color:#fff;">⚠️</div>
+                  <div style="flex:1;overflow:hidden;">
+                    <div id="simSenderName" style="font-weight:600;font-size:13px;color:#e9edef;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Unknown Sender</div>
+                    <div style="font-size:11px;color:#8696a0;">Tap for threat intel · Unverified caller</div>
+                  </div>
+                </div>
+
+                <!-- Chat Canvas with Syntax Highlighter -->
+                <div style="background:#0b141a;padding:16px 12px;min-height:160px;background-image:radial-gradient(#1f2937 1px, transparent 1px);background-size:14px 14px;">
+                  <div style="background:#202c33;padding:10px 12px;border-radius:8px 8px 8px 0;color:#e9edef;font-size:13px;line-height:1.45;box-shadow:0 1px 3px rgba(0,0,0,0.3);">
+                    <div id="simMessageHighlighted" style="word-break:break-word;">
+                      <em>Paste or select an example message on the left to highlight manipulation markers...</em>
+                    </div>
+                    <div style="text-align:right;font-size:10px;color:#8696a0;margin-top:6px;">12:45 PM · <span style="color:#53bdeb;">✓✓</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Manipulation Technique Badges -->
+              <div id="manipulationTags" style="margin-top:var(--sp-3);display:flex;gap:var(--sp-2);flex-wrap:wrap;justify-content:center;">
+                <span class="badge badge-neutral" style="font-size:11px;">Awaiting Message Body</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -354,6 +395,69 @@
         duration   = parseInt(document.getElementById('voiceDurationInput').value) || 0;
       }
       runScan(activeEngine, target, sender, duration, transcript);
+    }
+
+    function updatePayloadSimulator() {
+      const text = document.getElementById('textInput') ? document.getElementById('textInput').value.trim() : '';
+      const sender = document.getElementById('senderInput') ? document.getElementById('senderInput').value.trim() : '';
+
+      const senderEl = document.getElementById('simSenderName');
+      const badgeEl = document.getElementById('simulatorBadge');
+      const msgEl = document.getElementById('simMessageHighlighted');
+      const tagsEl = document.getElementById('manipulationTags');
+
+      if (senderEl) {
+        senderEl.textContent = sender || 'Unknown Sender (+91 98765 00000)';
+      }
+
+      if (!text) {
+        if (msgEl) msgEl.innerHTML = '<em>Paste or select an example message on the left to highlight manipulation markers...</em>';
+        if (badgeEl) { badgeEl.textContent = 'Real-Time Syntax'; badgeEl.className = 'badge badge-neutral'; }
+        if (tagsEl) tagsEl.innerHTML = '<span class="badge badge-neutral" style="font-size:11px;">Awaiting Message Body</span>';
+        return;
+      }
+
+      let tags = [];
+      let highlighted = escHtml(text);
+
+      // 1. URLs & links: purple
+      const urlRegex = /(https?:\/\/[^\s]+|bit\.ly\/[^\s]+|tinyurl\.com\/[^\s]+|\.apk\b)/gi;
+      if (urlRegex.test(highlighted)) {
+        highlighted = highlighted.replace(urlRegex, m => `<mark class="sim-mark-link" title="Unverified External Phishing / Malicious APK Trap">${m}</mark>`);
+        tags.push('<span class="badge badge-danger" style="font-size:11px;">🟣 External Phishing Lure</span>');
+      }
+
+      // 2. High psychological urgency: red
+      const urgencyRegex = /(disconnected tonight|tonight at 9:30|within 24 hours|within 2 hours|immediately|blocked|suspended|pending kyc|power office|lottery|winner|cbi|police arrest|urgent|action required)/gi;
+      if (urgencyRegex.test(highlighted)) {
+        highlighted = highlighted.replace(urgencyRegex, m => `<mark class="sim-mark-urgency" title="High Psychological Urgency Manipulation">${m}</mark>`);
+        tags.push('<span class="badge badge-danger" style="font-size:11px;">🔴 Coercive Urgency Pressure</span>');
+      }
+
+      // 3. Unofficial phone numbers: yellow
+      const phoneRegex = /(\+?91[\s-]?[6-9]\d{9}|\b[6-9]\d{9}\b)/g;
+      if (phoneRegex.test(highlighted)) {
+        highlighted = highlighted.replace(phoneRegex, m => `<mark class="sim-mark-phone" title="Unofficial Customer Support Call-Back Lure">${m}</mark>`);
+        tags.push('<span class="badge badge-warn" style="font-size:11px;">🟡 Rogue Callback Number</span>');
+      }
+
+      if (msgEl) msgEl.innerHTML = highlighted;
+      if (badgeEl) {
+        if (tags.length >= 2) {
+          badgeEl.textContent = 'High Manipulation';
+          badgeEl.className = 'badge badge-danger';
+        } else if (tags.length === 1) {
+          badgeEl.textContent = 'Suspicious Patterns';
+          badgeEl.className = 'badge badge-warn';
+        } else {
+          badgeEl.textContent = 'Clean Format';
+          badgeEl.className = 'badge badge-safe';
+        }
+      }
+
+      if (tagsEl) {
+        tagsEl.innerHTML = tags.length ? tags.join(' ') : '<span class="badge badge-safe" style="font-size:11px;">No Obvious Manipulation Triggers</span>';
+      }
     }
   </script>
 </body>

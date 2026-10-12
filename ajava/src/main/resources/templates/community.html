@@ -6,6 +6,7 @@
   <meta name="description" content="Community threat intelligence — browse and contribute crowdsourced fraud and scam incident reports on Authentica.">
   <title>Threat Feed | Authentica</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
 
@@ -30,12 +31,41 @@
 
   <main>
     <div class="container">
+      <!-- ── Live Attack Radar Ticker ────────────────────────── -->
+      <div style="background:#0f172a;border:1px solid #1e293b;border-radius:var(--r-md);padding:10px 16px;margin-bottom:var(--sp-6);display:flex;align-items:center;gap:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+        <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:bold;color:#ef4444;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;animation:pulse 1.5s infinite;"></span>
+          LIVE RADAR
+        </div>
+        <div style="flex:1;overflow:hidden;white-space:nowrap;">
+          <div id="radarTicker" style="display:inline-block;animation:tickerMarquee 35s linear infinite;color:#94a3b8;font-size:12px;">
+            🚨 Digital Arrest extortion ring intercepted in Mumbai (CBI impersonation) &nbsp;&bull;&nbsp; ⚠️ Fake Electricity Disconnection SMS wave blocked in Ahmedabad &nbsp;&bull;&nbsp; 🚨 UPI Collect fraud trap intercepted in Bengaluru &nbsp;&bull;&nbsp; ⚠️ SBI Netbanking Phishing campaign blocked in New Delhi &nbsp;&bull;&nbsp; 🚨 Courier Customs extortion call blocked in Hyderabad
+          </div>
+        </div>
+      </div>
+
       <div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between;gap:var(--sp-4);flex-wrap:wrap;">
         <div>
-          <h1 class="page-title">Community Threat Feed</h1>
-          <p class="page-subtitle">Crowdsourced fraud and scam reports verified by community consensus.</p>
+          <h1 class="page-title">Community Threat Feed &amp; Geolocation Radar</h1>
+          <p class="page-subtitle">Crowdsourced fraud reports, real-time geographic telemetry &amp; consensus verification.</p>
         </div>
-        <button class="btn btn-primary" onclick="openModal('reportModal')">Submit report</button>
+        <button class="btn btn-primary" onclick="openModal('reportModal')">+ Submit Incident</button>
+      </div>
+
+      <!-- ── Live Geospatial Threat Map ───────────────────────── -->
+      <div class="card" style="margin-bottom:var(--sp-8);padding:0;overflow:hidden;border:1px solid var(--col-border);">
+        <div style="padding:var(--sp-4);border-bottom:1px solid var(--col-border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-2);">
+          <div>
+            <h2 class="card-title" style="font-size:var(--text-base);">🗺️ Live Cyber Threat Geolocation Radar</h2>
+            <p class="text-muted" style="font-size:var(--text-xs);margin-top:2px;">Real-time spatial visualization of active cybercrime hotspots and citizen incident telemetry across India.</p>
+          </div>
+          <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;">
+            <span class="badge badge-danger">● Phishing / URL Attack</span>
+            <span class="badge" style="background:#fef3c7;color:#92400e;">● UPI Payment Scam</span>
+            <span class="badge" style="background:#f3e8ff;color:#6b21a8;">● Extortion / Digital Arrest</span>
+          </div>
+        </div>
+        <div id="threatRadarMap" style="height:360px;width:100%;background:#090d16;"></div>
       </div>
 
       <div id="communityFeed">
@@ -109,6 +139,7 @@
     </div>
   </footer>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="/js/app.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', loadCommunityFeed);

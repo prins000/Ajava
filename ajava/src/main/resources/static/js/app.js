@@ -363,14 +363,47 @@ function renderScanResult(data) {
         ${recsHtml}
         <div style="margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--col-border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-2);">
           <span class="text-muted" style="font-size:var(--text-xs);">Legal Forensic Compliance: Ready for Indian IT Act FIR filing</span>
-          <button class="btn btn-outline btn-sm" onclick="downloadForensicReport()" style="display:inline-flex;align-items:center;gap:6px;font-weight:var(--fw-bold);border-color:var(--col-brand);color:var(--col-brand);">
-            📄 Export Cybercrime FIR Evidence Report (PDF)
-          </button>
+          <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;">
+            ${(a.riskLevel === 'HIGH' || a.riskLevel === 'CRITICAL') ? `
+              <button class="btn btn-outline btn-sm" onclick="broadcastEmergencyAlert('${escHtml(a.inputTarget)}', '${escHtml(a.type)}', ${a.threatScore || 85})" style="display:inline-flex;align-items:center;gap:6px;font-weight:var(--fw-bold);border-color:var(--col-danger);color:var(--col-danger);">
+                🚨 Broadcast SOS to Family Shield
+              </button>
+            ` : ''}
+            <button class="btn btn-outline btn-sm" onclick="downloadForensicReport()" style="display:inline-flex;align-items:center;gap:6px;font-weight:var(--fw-bold);border-color:var(--col-brand);color:var(--col-brand);">
+              📄 Export Cybercrime FIR Evidence Report (PDF)
+            </button>
+          </div>
         </div>
       </div>
     </div>`;
 
   el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function broadcastEmergencyAlert(target, type, score) {
+  const user = getUser();
+  if (!user) {
+    showAlert('Please sign in to broadcast emergency SOS alerts to your Family Shield.', 'warn');
+    openAuthModal('login');
+    return;
+  }
+
+  if (!confirm('Broadcast emergency alert for this critical threat to your registered Family Emergency Shield contacts?')) {
+    return;
+  }
+
+  try {
+    showAlert('Dispatching Family Shield emergency SOS broadcast...', 'warn');
+    const flags = window._lastScanData && window._lastScanData.flags ? window._lastScanData.flags : [];
+    const res = await apiFetch('/alerts/broadcast-threat', {
+      method: 'POST',
+      body: JSON.stringify({ target, type, threatScore: score, flags })
+    });
+    const count = res && res.dispatchedCount !== undefined ? res.dispatchedCount : 'all';
+    showAlert(`🚨 Emergency SOS broadcast successfully sent to ${count} active family contacts via Gmail SMTP!`, 'safe');
+  } catch (err) {
+    showAlert(err.message, 'danger');
+  }
 }
 
 // ── Forensic Cybercrime FIR PDF Generator ────────────────────────
@@ -536,6 +569,91 @@ async function downloadForensicReport(data = window._lastScanData) {
 }
 
 // ── Community feed ───────────────────────────────────────────
+let _threatMapInstance = null;
+
+const METRO_COORDS = {
+  'Ahmedabad': [23.0225, 72.5714],
+  'Mumbai': [19.0760, 72.8777],
+  'Delhi': [28.6139, 77.2090],
+  'New Delhi': [28.6139, 77.2090],
+  'Bengaluru': [12.9716, 77.5946],
+  'Bangalore': [12.9716, 77.5946],
+  'Hyderabad': [17.3850, 78.4867],
+  'Kolkata': [22.5726, 88.3639],
+  'Pune': [18.5204, 73.8567],
+  'Jaipur': [26.9124, 75.7873],
+  'Surat': [21.1702, 72.8311],
+  'Lucknow': [26.8467, 80.9462],
+  'Chennai': [13.0827, 80.2707],
+  'Chandigarh': [30.7333, 76.7794]
+};
+
+function initThreatRadarMap(reports) {
+  const mapEl = document.getElementById('threatRadarMap');
+  if (!mapEl || !window.L) return;
+
+  if (_threatMapInstance) {
+    _threatMapInstance.remove();
+    _threatMapInstance = null;
+  }
+
+  // Centered on India with sleek dark theme
+  _threatMapInstance = L.map('threatRadarMap', {
+    center: [21.5, 78.9],
+    zoom: 5,
+    minZoom: 4,
+    maxZoom: 14,
+    scrollWheelZoom: false
+  });
+
+  // Free OpenStreetMap tiles (100% free, no API key, no watermark)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(_threatMapInstance);
+
+  if (!reports || !reports.length) return;
+
+  const defaultCities = Object.values(METRO_COORDS);
+
+  reports.forEach((r, idx) => {
+    let latlng = null;
+    const city = (r.city || '').trim();
+    if (METRO_COORDS[city]) {
+      latlng = METRO_COORDS[city];
+    } else {
+      const base = defaultCities[idx % defaultCities.length];
+      const jitterLat = Math.sin(idx * 7) * 0.18;
+      const jitterLng = Math.cos(idx * 11) * 0.18;
+      latlng = [base[0] + jitterLat, base[1] + jitterLng];
+    }
+
+    const pinClass = r.type === 'CALL' ? 'radar-pin-CALL' : (r.type === 'UPI' ? 'radar-pin-UPI' : 'radar-pin-URL');
+    const customIcon = L.divIcon({
+      className: 'custom-radar-pin',
+      html: `<div class="radar-pin ${pinClass}"></div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8]
+    });
+
+    const popupHtml = `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:12px;color:#0f172a;min-width:200px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-weight:bold;color:#be123c;">${escHtml(r.type)} INCIDENT</span>
+          <span style="font-size:10px;background:#e2e8f0;padding:1px 4px;border-radius:3px;">${escHtml(r.status)}</span>
+        </div>
+        <strong style="color:#0f172a;display:block;margin-bottom:4px;font-size:13px;">${escHtml(r.title)}</strong>
+        <p style="margin:0 0 6px;color:#475569;font-size:11px;line-height:1.4;">${escHtml(r.description || '')}</p>
+        <div style="font-size:10px;color:#64748b;">Hotspot: <strong>${escHtml(r.city || 'India')}</strong></div>
+      </div>
+    `;
+
+    L.marker(latlng, { icon: customIcon })
+      .addTo(_threatMapInstance)
+      .bindPopup(popupHtml);
+  });
+}
+
 async function loadCommunityFeed() {
   const el = document.getElementById('communityFeed');
   if (!el) return;
@@ -545,9 +663,11 @@ async function loadCommunityFeed() {
     const list = data.content || [];
     if (!list.length) {
       el.innerHTML = '<div class="empty-state"><p>No reports on record yet.</p></div>';
+      initThreatRadarMap([]);
       return;
     }
     el.innerHTML = list.map(r => feedCardHtml(r)).join('');
+    initThreatRadarMap(list);
   } catch (err) {
     el.innerHTML = `<div class="alert alert-danger">${escHtml(err.message)}</div>`;
   }

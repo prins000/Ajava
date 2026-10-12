@@ -757,3 +757,72 @@ select.form-control { cursor: pointer; }
   .profile-header { flex-direction: column; text-align: center; }
   .modal { max-width: 100%; border-radius: var(--r-lg); }
 }
+
+/* ── Phase 4: Attack Radar & Payload Simulator ────────────── */
+@keyframes radarPulse {
+  0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes tickerMarquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.radar-pin {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid #ffffff;
+  animation: radarPulse 1.8s infinite;
+  cursor: pointer;
+}
+
+.radar-pin-CALL {
+  background: #9333ea;
+  box-shadow: 0 0 10px #9333ea;
+}
+
+.radar-pin-UPI {
+  background: #f59e0b;
+  box-shadow: 0 0 10px #f59e0b;
+}
+
+.radar-pin-URL {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+#threatRadarMap .leaflet-tile {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+.sim-mark-urgency {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+  border-bottom: 2px solid #ef4444;
+}
+
+.sim-mark-phone {
+  background: rgba(234, 179, 8, 0.25);
+  color: #fde047;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+  border-bottom: 2px solid #eab308;
+}
+
+.sim-mark-link {
+  background: rgba(168, 85, 247, 0.25);
+  color: #d8b4fe;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+  border-bottom: 2px solid #a855f7;
+}
+
