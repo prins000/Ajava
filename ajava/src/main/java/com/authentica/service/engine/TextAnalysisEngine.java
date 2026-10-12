@@ -1,6 +1,9 @@
 package com.authentica.service.engine;
 
+import com.authentica.model.HeuristicRule;
 import com.authentica.model.enums.RiskLevel;
+import com.authentica.model.enums.RuleCategory;
+import com.authentica.repository.HeuristicRuleRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -10,22 +13,7 @@ import java.util.regex.Pattern;
 @Component
 public class TextAnalysisEngine {
 
-    private static final List<String> URGENCY_TRIGGERS = List.of(
-            "immediate action", "within 24 hours", "account blocked", "card suspended",
-            "electricity will be disconnected", "tonight 9:30 pm", "urgent notice", "last warning",
-            "deactivated immediately", "legal action", "arrest warrant", "final notice"
-    );
-
-    private static final List<String> FINANCIAL_LURES = List.of(
-            "won lottery", "cashback of rs", "congratulations you won", "reward points expired",
-            "pre-approved loan", "claim bonus", "free gift", "transfer rs", "credited to your account"
-    );
-
-    private static final List<String> CREDENTIAL_TRAPS = List.of(
-            "click link to update kyc", "pan card update", "share otp", "enter your pin",
-            "download apk", "install anydesk", "install teamviewer", "verify aadhar",
-            "update bank details", "send debit card details"
-    );
+    private final HeuristicRuleRepository ruleRepository;
 
     private static final Pattern URL_PATTERN = Pattern.compile(
             "https?://[\\w\\.-]+(?:\\.[a-zA-Z]{2,})(?:/\\S*)?",
@@ -35,6 +23,10 @@ public class TextAnalysisEngine {
     private static final Pattern PHONE_PATTERN = Pattern.compile(
             "(?:\\+91|0)?[6-9]\\d{9}"
     );
+
+    public TextAnalysisEngine(HeuristicRuleRepository ruleRepository) {
+        this.ruleRepository = ruleRepository;
+    }
 
     public EngineResult analyze(String text, String senderNumber) {
         List<String> flags = new ArrayList<>();
@@ -47,29 +39,32 @@ public class TextAnalysisEngine {
 
         String lowerText = text.toLowerCase();
 
-        // 1. Urgency detection
-        for (String trigger : URGENCY_TRIGGERS) {
-            if (lowerText.contains(trigger)) {
-                flags.add("High psychological urgency lure detected: '" + trigger + "'");
-                threatScore += 25;
+        // 1. Dynamic Urgency detection from Database
+        List<HeuristicRule> urgencyRules = ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.SMS_URGENCY);
+        for (HeuristicRule rule : urgencyRules) {
+            if (lowerText.contains(rule.getPattern().toLowerCase())) {
+                flags.add(rule.getDescription() != null ? rule.getDescription() : "High psychological urgency lure detected: '" + rule.getPattern() + "'");
+                threatScore += rule.getWeight();
                 break;
             }
         }
 
-        // 2. Financial lure detection
-        for (String lure : FINANCIAL_LURES) {
-            if (lowerText.contains(lure)) {
-                flags.add("Unrealistic financial incentive / reward trigger: '" + lure + "'");
-                threatScore += 25;
+        // 2. Dynamic Financial lure detection from Database
+        List<HeuristicRule> lureRules = ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.SMS_FINANCIAL_LURE);
+        for (HeuristicRule rule : lureRules) {
+            if (lowerText.contains(rule.getPattern().toLowerCase())) {
+                flags.add(rule.getDescription() != null ? rule.getDescription() : "Unrealistic financial incentive / reward trigger: '" + rule.getPattern() + "'");
+                threatScore += rule.getWeight();
                 break;
             }
         }
 
-        // 3. Credential and sensitive data harvest traps
-        for (String trap : CREDENTIAL_TRAPS) {
-            if (lowerText.contains(trap)) {
-                flags.add("Sensitive data solicitation / remote-access indicator: '" + trap + "'");
-                threatScore += 35;
+        // 3. Dynamic Credential & sensitive trap detection from Database
+        List<HeuristicRule> trapRules = ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.SMS_CREDENTIAL_TRAP);
+        for (HeuristicRule rule : trapRules) {
+            if (lowerText.contains(rule.getPattern().toLowerCase())) {
+                flags.add(rule.getDescription() != null ? rule.getDescription() : "Sensitive data solicitation / remote-access indicator: '" + rule.getPattern() + "'");
+                threatScore += rule.getWeight();
                 break;
             }
         }

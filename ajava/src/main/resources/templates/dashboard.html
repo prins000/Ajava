@@ -119,10 +119,110 @@
           </div>
         </div>
 
+        <!-- 2-Column Grid: Protected Contacts Shield & Incident Helpdesk -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:var(--sp-6);margin-top:var(--sp-6);">
+
+          <!-- Family Emergency Shield (Protected Contacts) -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Family Emergency Shield</h2>
+                <p class="text-muted" style="font-size:var(--text-xs);margin-top:var(--sp-1);">Protected family contacts monitored against digital arrest and extortion calls.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openModal('addContactModal')">+ Add Contact</button>
+            </div>
+            <div id="contactsContainer">
+              <div class="empty-state"><p>Loading protected contacts…</p></div>
+            </div>
+          </div>
+
+          <!-- Cyber Incident Support Helpdesk -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Cyber Incident Helpdesk</h2>
+                <p class="text-muted" style="font-size:var(--text-xs);margin-top:var(--sp-1);">Lodge and track cyber crime incident assistance tickets.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openModal('addTicketModal')">+ Lodge Ticket</button>
+            </div>
+            <div id="ticketsContainer">
+              <div class="empty-state"><p>Loading support tickets…</p></div>
+            </div>
+          </div>
+
+        </div>
+
       </div>
 
     </div>
   </main>
+
+  <!-- Add Protected Contact Modal -->
+  <div class="modal-overlay" id="addContactModal" role="dialog" aria-modal="true" aria-labelledby="addContactTitle">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="addContactTitle">Register Protected Family Contact</h2>
+        <button class="modal-close" onclick="closeModal('addContactModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="contactNameInput">Full Name</label>
+          <input type="text" id="contactNameInput" class="form-control" placeholder="e.g. Ramesh Sharma (Father)" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="contactPhoneInput">Phone Number</label>
+          <input type="tel" id="contactPhoneInput" class="form-control" placeholder="+91 98765 00001" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="contactRelInput">Relationship</label>
+          <select id="contactRelInput" class="form-control">
+            <option value="Father">Father</option>
+            <option value="Mother">Mother</option>
+            <option value="Spouse">Spouse</option>
+            <option value="Child">Child</option>
+            <option value="Sibling">Sibling</option>
+            <option value="Emergency Contact">Emergency Contact</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('addContactModal')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="submitAddContact()">Register Contact</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lodge Incident Ticket Modal -->
+  <div class="modal-overlay" id="addTicketModal" role="dialog" aria-modal="true" aria-labelledby="addTicketTitle">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="addTicketTitle">Lodge Cyber Incident Ticket</h2>
+        <button class="modal-close" onclick="closeModal('addTicketModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="ticketSubjectInput">Incident Subject</label>
+          <input type="text" id="ticketSubjectInput" class="form-control" placeholder="e.g. Fraudulent UPI Collect request from refund-desk@ybl" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ticketPriorityInput">Priority</label>
+          <select id="ticketPriorityInput" class="form-control">
+            <option value="HIGH">High (Urgent threat / financial loss)</option>
+            <option value="MEDIUM" selected>Medium (Suspicious link / phone call)</option>
+            <option value="LOW">Low (Inquiry / general query)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ticketDescInput">Detailed Description</label>
+          <textarea id="ticketDescInput" class="form-control" rows="4" placeholder="Provide full details — message content, fraud links, amount requested, or caller identity…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('addTicketModal')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="submitTicket()">Lodge Ticket</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Scan Detail Modal -->
   <div class="modal-overlay" id="scanDetailModal" role="dialog" aria-modal="true" aria-labelledby="modalDetailTitle">
@@ -151,6 +251,7 @@
     </div>
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="/js/app.js"></script>
   <script>
     let currentHistoryPage = 0;
@@ -210,6 +311,8 @@
       }
 
       loadUserHistory(0);
+      loadProtectedContacts();
+      loadMyTickets();
     }
 
     async function loadUserHistory(page = 0) {
@@ -352,6 +455,151 @@
         loadUserHistory(currentHistoryPage);
       } catch (err) {
         showAlert(err.message, 'danger');
+      }
+    }
+
+    // ── Protected Contacts Shield ──────────────────────────────
+    async function loadProtectedContacts() {
+      const el = document.getElementById('contactsContainer');
+      el.innerHTML = '<div class="empty-state"><p>Loading contacts…</p></div>';
+
+      try {
+        const list = await apiFetch('/contacts');
+        if (!list || list.length === 0) {
+          el.innerHTML = '<div class="empty-state"><p>No family contacts protected yet. Register elderly parents or relatives to shield them against extortion scripts.</p></div>';
+          return;
+        }
+
+        el.innerHTML = `
+          <div style="display:flex;flex-direction:column;gap:var(--sp-3);">
+            ${list.map(c => `
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--sp-3);background:var(--col-bg);border:1px solid var(--col-border);border-radius:var(--r-md);flex-wrap:wrap;gap:var(--sp-2);">
+                <div>
+                  <div style="display:flex;align-items:center;gap:var(--sp-2);">
+                    <strong style="color:var(--col-ink);">${escHtml(c.contactName)}</strong>
+                    <span class="badge badge-neutral">${escHtml(c.relationship || 'Family')}</span>
+                    <span class="badge ${c.isAlertEnabled ? 'badge-safe' : 'badge-warn'}">${c.isAlertEnabled ? '🛡️ Alert Active' : 'Muted'}</span>
+                  </div>
+                  <code class="target-display" style="font-size:var(--text-xs);margin-top:var(--sp-1);">${escHtml(c.phoneNumber)}</code>
+                </div>
+                <div style="display:flex;gap:var(--sp-2);">
+                  <button class="btn btn-outline btn-sm" onclick="toggleContactAlert(${c.id})">${c.isAlertEnabled ? 'Mute' : 'Activate'}</button>
+                  <button class="btn btn-ghost btn-sm" style="color:var(--col-danger);" onclick="deleteContact(${c.id})">&times;</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (err) {
+        el.innerHTML = `<div class="alert alert-danger">${escHtml(err.message)}</div>`;
+      }
+    }
+
+    async function submitAddContact() {
+      const contactName = document.getElementById('contactNameInput').value.trim();
+      const phoneNumber = document.getElementById('contactPhoneInput').value.trim();
+      const relationship = document.getElementById('contactRelInput').value;
+
+      if (!contactName || !phoneNumber) {
+        showAlert('Please provide contact name and phone number.', 'warn');
+        return;
+      }
+
+      try {
+        await apiFetch('/contacts', {
+          method: 'POST',
+          body: JSON.stringify({ contactName, phoneNumber, relationship })
+        });
+        showAlert('Family member added to Cyber Shield.', 'safe');
+        closeModal('addContactModal');
+        document.getElementById('contactNameInput').value = '';
+        document.getElementById('contactPhoneInput').value = '';
+        loadProtectedContacts();
+      } catch (e) {
+        showAlert(e.message, 'danger');
+      }
+    }
+
+    async function toggleContactAlert(id) {
+      try {
+        await apiFetch(`/contacts/${id}/toggle-alert`, { method: 'PATCH' });
+        loadProtectedContacts();
+      } catch (e) {
+        showAlert(e.message, 'danger');
+      }
+    }
+
+    async function deleteContact(id) {
+      if (!confirm('Remove this contact from the protective shield?')) return;
+      try {
+        await apiFetch(`/contacts/${id}`, { method: 'DELETE' });
+        showAlert('Contact removed.', 'neutral');
+        loadProtectedContacts();
+      } catch (e) {
+        showAlert(e.message, 'danger');
+      }
+    }
+
+    // ── Incident Helpdesk Tickets ──────────────────────────────
+    async function loadMyTickets() {
+      const el = document.getElementById('ticketsContainer');
+      el.innerHTML = '<div class="empty-state"><p>Loading tickets…</p></div>';
+
+      try {
+        const list = await apiFetch('/tickets/my');
+        if (!list || list.length === 0) {
+          el.innerHTML = '<div class="empty-state"><p>No incident tickets lodged. If you fall victim to a scam, lodge an incident ticket immediately for assistance.</p></div>';
+          return;
+        }
+
+        el.innerHTML = `
+          <div style="display:flex;flex-direction:column;gap:var(--sp-3);">
+            ${list.map(t => {
+              const stBadge = t.status === 'RESOLVED' ? 'badge-safe' : (t.status === 'IN_PROGRESS' ? 'badge-warn' : 'badge-danger');
+              const prioBadge = t.priority === 'HIGH' ? 'badge-danger' : (t.priority === 'MEDIUM' ? 'badge-warn' : 'badge-neutral');
+              return `
+                <div style="padding:var(--sp-3);background:var(--col-bg);border:1px solid var(--col-border);border-radius:var(--r-md);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-1);flex-wrap:wrap;gap:var(--sp-2);">
+                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                      <span class="badge ${stBadge}">${escHtml(t.status)}</span>
+                      <span class="badge ${prioBadge}">${escHtml(t.priority)}</span>
+                    </div>
+                    <span class="text-muted" style="font-size:var(--text-xs);">${fmtDate(t.createdAt)}</span>
+                  </div>
+                  <div style="font-weight:var(--fw-semi);font-size:var(--text-sm);color:var(--col-ink);">${escHtml(t.subject)}</div>
+                  <p style="font-size:var(--text-xs);color:var(--col-muted);margin-top:var(--sp-1);">${escHtml(t.description)}</p>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } catch (err) {
+        el.innerHTML = `<div class="alert alert-danger">${escHtml(err.message)}</div>`;
+      }
+    }
+
+    async function submitTicket() {
+      const subject = document.getElementById('ticketSubjectInput').value.trim();
+      const priority = document.getElementById('ticketPriorityInput').value;
+      const description = document.getElementById('ticketDescInput').value.trim();
+
+      if (!subject || !description) {
+        showAlert('Please provide both a subject and incident description.', 'warn');
+        return;
+      }
+
+      try {
+        await apiFetch('/tickets', {
+          method: 'POST',
+          body: JSON.stringify({ subject, priority, description })
+        });
+        showAlert('Cyber Incident ticket lodged with Security Desk.', 'safe');
+        closeModal('addTicketModal');
+        document.getElementById('ticketSubjectInput').value = '';
+        document.getElementById('ticketDescInput').value = '';
+        loadMyTickets();
+      } catch (e) {
+        showAlert(e.message, 'danger');
       }
     }
   </script>

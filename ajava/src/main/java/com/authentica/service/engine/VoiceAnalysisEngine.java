@@ -1,6 +1,9 @@
 package com.authentica.service.engine;
 
+import com.authentica.model.HeuristicRule;
 import com.authentica.model.enums.RiskLevel;
+import com.authentica.model.enums.RuleCategory;
+import com.authentica.repository.HeuristicRuleRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -9,11 +12,11 @@ import java.util.List;
 @Component
 public class VoiceAnalysisEngine {
 
-    private static final List<String> DIGITAL_ARREST_KEYWORDS = List.of(
-            "police department", "customs narcotics", "digital arrest", "parcel confiscated",
-            "illegal passport found", "cbi officer", "crime branch", "arrest warrant",
-            "remain on video call", "do not disconnect", "transfer bail amount to rbi verification account"
-    );
+    private final HeuristicRuleRepository ruleRepository;
+
+    public VoiceAnalysisEngine(HeuristicRuleRepository ruleRepository) {
+        this.ruleRepository = ruleRepository;
+    }
 
     public EngineResult analyze(String audioUrl, Integer durationSeconds, String transcript) {
         List<String> flags = new ArrayList<>();
@@ -22,10 +25,11 @@ public class VoiceAnalysisEngine {
 
         if (transcript != null && !transcript.isBlank()) {
             String lower = transcript.toLowerCase();
-            for (String kw : DIGITAL_ARREST_KEYWORDS) {
-                if (lower.contains(kw)) {
-                    flags.add("High-risk conversational marker detected: '" + kw + "' (Consistent with Digital Arrest scam)");
-                    threatScore += 35;
+            List<HeuristicRule> voiceRules = ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.VOICE_EXTORTION);
+            for (HeuristicRule rule : voiceRules) {
+                if (lower.contains(rule.getPattern().toLowerCase())) {
+                    flags.add(rule.getDescription() != null ? rule.getDescription() : "High-risk conversational marker detected: '" + rule.getPattern() + "' (Consistent with Digital Arrest scam)");
+                    threatScore += rule.getWeight();
                 }
             }
         }
