@@ -288,7 +288,7 @@
         const res = await fetch(`${API_BASE}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'admin@authentica.io', password: 'password123' })
+          body: JSON.stringify({ email: 'admin@authentica.io', password: 'Admin@1234' })
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.message || 'Demo admin login failed');
@@ -303,7 +303,7 @@
 
     async function loadAdminMetrics() {
       try {
-        const stats = await apiFetch('/admin/stats');
+        const stats = await apiFetch('/admin/analytics');
         if (stats) {
           document.getElementById('statUsers').textContent = stats.totalUsers ?? 0;
           document.getElementById('statScans').textContent = stats.totalScans ?? 0;
@@ -320,7 +320,8 @@
       el.innerHTML = '<div class="empty-state"><p>Loading moderation queue…</p></div>';
 
       try {
-        const reports = await apiFetch('/admin/reports');
+        const data = await apiFetch('/admin/reports');
+        const reports = (data && data.content) ? data.content : (Array.isArray(data) ? data : []);
         if (!reports || reports.length === 0) {
           el.innerHTML = '<div class="empty-state"><p>No reports currently pending moderation.</p></div>';
           return;
@@ -364,7 +365,7 @@
 
     async function moderateReport(id, status) {
       try {
-        await apiFetch(`/admin/reports/${id}/moderate?status=${status}`, { method: 'PATCH' });
+        await apiFetch(`/admin/reports/${id}/status?status=${status}`, { method: 'PATCH' });
         showAlert(`Report #${id} marked as ${status}.`, 'safe');
         loadAdminReports();
         loadAdminMetrics();
@@ -388,7 +389,8 @@
     async function loadAdminUsers() {
       const el = document.getElementById('adminUsersContainer');
       try {
-        const users = await apiFetch('/admin/users');
+        const data = await apiFetch('/admin/users');
+        const users = (data && data.content) ? data.content : (Array.isArray(data) ? data : []);
         if (!users || users.length === 0) {
           el.innerHTML = '<div class="empty-state"><p>No users registered.</p></div>';
           return;
@@ -426,7 +428,8 @@
     async function loadAdminTickets() {
       const el = document.getElementById('adminTicketsContainer');
       try {
-        const tickets = await apiFetch('/tickets');
+        const data = await apiFetch('/tickets/admin');
+        const tickets = (data && data.content) ? data.content : (Array.isArray(data) ? data : []);
         if (!tickets || tickets.length === 0) {
           el.innerHTML = '<div class="empty-state"><p>No incident support tickets lodged.</p></div>';
           return;
@@ -450,7 +453,7 @@
                   <td><span class="badge ${t.status === 'RESOLVED' ? 'badge-safe' : (t.status === 'IN_PROGRESS' ? 'badge-warn' : 'badge-danger')}">${t.status}</span></td>
                   <td><span class="badge ${t.priority === 'HIGH' ? 'badge-danger' : 'badge-neutral'}">${t.priority}</span></td>
                   <td><strong>${escHtml(t.subject)}</strong></td>
-                  <td class="font-mono" style="font-size:var(--text-xs);">${escHtml(t.user?.email || 'N/A')}</td>
+                  <td class="font-mono" style="font-size:var(--text-xs);">${escHtml(t.userEmail || (t.user && t.user.email) || 'N/A')}</td>
                   <td class="text-muted" style="font-size:var(--text-xs);">${fmtDate(t.createdAt)}</td>
                   <td>
                     <div style="display:flex;gap:var(--sp-1);">
@@ -481,7 +484,8 @@
     async function loadAdminFeedback() {
       const el = document.getElementById('adminFeedbackContainer');
       try {
-        const feedbacks = await apiFetch('/feedback');
+        const data = await apiFetch('/feedback');
+        const feedbacks = (data && data.content) ? data.content : (Array.isArray(data) ? data : []);
         if (!feedbacks || feedbacks.length === 0) {
           el.innerHTML = '<div class="empty-state"><p>No citizen feedback received yet.</p></div>';
           return;
@@ -502,7 +506,7 @@
                 <tr>
                   <td><strong>${'⭐'.repeat(f.rating || 5)} (${f.rating}/5)</strong></td>
                   <td class="font-mono" style="font-size:var(--text-xs);">${escHtml(f.userEmail || 'Anonymous')}</td>
-                  <td>${escHtml(f.comments || 'No comment provided')}</td>
+                  <td>${escHtml(f.comment || f.comments || 'No comment provided')}</td>
                   <td class="text-muted" style="font-size:var(--text-xs);">${fmtDate(f.createdAt)}</td>
                 </tr>
               `).join('')}
@@ -522,7 +526,8 @@
       el.innerHTML = '<div class="empty-state"><p>Loading rules from MySQL…</p></div>';
 
       try {
-        const rules = await apiFetch('/admin/rules');
+        const data = await apiFetch('/admin/rules');
+        const rules = (data && data.content) ? data.content : (Array.isArray(data) ? data : []);
         allRulesCache = rules || [];
         renderRulesTable();
       } catch (err) {

@@ -241,7 +241,8 @@
     async function loadCommunityFeed() {
       const el = document.getElementById('communityFeed');
       try {
-        const reports = await apiFetch('/community/reports');
+        const data = await apiFetch('/community/feed');
+        const reports = (data && data.content) ? data.content : (Array.isArray(data) ? data : []);
         if (!reports || reports.length === 0) {
           el.innerHTML = '<div class="empty-state"><p>No reports found. Be the first to submit a fraud alert!</p></div>';
           return;

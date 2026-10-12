@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Authentica Citizen Dashboard — Monitor your cyber hygiene trust score, review previous threat scans, and audit security telemetry.">
-  <title>Citizen Dashboard | Authentica SOC</title>
+  <title>Dashboard | Authentica SOC</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -36,7 +36,7 @@
         <a href="/admin" class="sidebar-link">
           <span class="sidebar-link-icon">🛡️</span> Compliance
         </a>
-        <a href="/dashboard" class="sidebar-link">
+        <a href="/dashboard#history" class="sidebar-link">
           <span class="sidebar-link-icon">🔐</span> Secure Vault
         </a>
         <a href="/admin" class="sidebar-link">
@@ -63,7 +63,7 @@
             <span class="sep">/</span>
             <a href="/dashboard">Operations</a>
             <span class="sep">/</span>
-            <span class="current">Cyber Hygiene &amp; Vault</span>
+            <span class="current" id="dashBreadcrumb">Cyber Hygiene &amp; Vault</span>
           </nav>
         </div>
         <div class="topbar-right">
@@ -97,10 +97,16 @@
         <div id="authDashboard" style="display:none;">
           <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:var(--sp-4);margin-bottom:var(--sp-6);">
             <div>
-              <h1 style="font-size:1.85rem;font-weight:var(--fw-bold);color:#ffffff;letter-spacing:-0.02em;">Citizen Cyber Hygiene Dashboard</h1>
-              <p class="text-muted" style="font-size:13px;margin-top:2px;">Personal security posture rating, threat exposure audit, and verified scan records.</p>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <h1 style="font-size:1.85rem;font-weight:var(--fw-bold);color:#ffffff;letter-spacing:-0.02em;" id="dashMainTitle">Citizen Cyber Hygiene Dashboard</h1>
+                <span id="dashRoleBadge" class="badge badge-brand">Citizen</span>
+              </div>
+              <p class="text-muted" style="font-size:13px;" id="dashMainSubtitle">Personal security posture rating, threat exposure audit, and verified scan records.</p>
             </div>
-            <div>
+            <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;">
+              <a href="/admin" id="dashAdminLinkBtn" class="btn btn-outline" style="display:none;border-color:var(--col-brand);color:var(--col-brand);">
+                ⚙️ Rule Engine &amp; Moderation
+              </a>
               <a href="/scanner" class="btn btn-primary">
                 <span>+ Run Threat Scan</span>
               </a>
@@ -115,7 +121,7 @@
               <div style="display:flex;align-items:center;gap:var(--sp-5);">
                 <div class="score-ring" id="dashScoreRing" style="width:84px;height:84px;font-size:var(--text-2xl);">--</div>
                 <div>
-                  <p class="text-muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--sp-1);">Personal Cyber Hygiene</p>
+                  <p class="text-muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--sp-1);" id="dashScoreTitle">Personal Cyber Hygiene</p>
                   <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-1);">
                     <span style="font-size:var(--text-xl);font-weight:var(--fw-bold);color:#ffffff;" id="dashTrustScore">--</span>
                     <span class="badge" id="dashRiskBadge">--</span>
@@ -126,7 +132,7 @@
 
               <!-- Profile Summary -->
               <div style="border-left:1px solid #1f2533;padding-left:var(--sp-6);">
-                <p class="text-muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--sp-2);">Citizen Profile</p>
+                <p class="text-muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--sp-2);">Account Identity</p>
                 <div style="font-weight:var(--fw-semi);font-size:var(--text-lg);color:#ffffff;" id="dashUserName">--</div>
                 <div style="font-size:var(--text-sm);color:var(--col-muted);" id="dashUserEmail">--</div>
                 <div style="font-size:var(--text-xs);color:var(--col-muted);margin-top:var(--sp-2);" id="dashUserPhone">--</div>
@@ -136,7 +142,7 @@
               <div class="stats-row" style="padding:0;background:none;border:none;">
                 <div class="stat-cell" style="padding:var(--sp-2);">
                   <span class="stat-value" id="dashTotalScans" style="color:var(--col-brand);">0</span>
-                  <span class="stat-label">Total Scans</span>
+                  <span class="stat-label">Scans Processed</span>
                 </div>
                 <div class="stat-cell" style="padding:var(--sp-2);">
                   <span class="stat-value" id="dashFlaggedThreats" style="color:var(--col-danger);">0</span>
@@ -148,14 +154,14 @@
           </div>
 
           <!-- Scan History Table Card -->
-          <div class="card" style="margin-bottom:var(--sp-6);">
+          <div class="card" style="margin-bottom:var(--sp-6);" id="history">
             <div class="card-header">
-              <span class="card-title">Personal Scan Audit Trail</span>
+              <span class="card-title" id="dashHistoryTitle">Personal Scan Audit Trail</span>
               <button class="btn btn-ghost btn-sm" onclick="loadUserHistory(0)">↻ Refresh</button>
             </div>
 
             <div class="table-wrapper" id="historyTableContainer">
-              <div class="empty-state"><p>Loading personal scan history…</p></div>
+              <div class="empty-state"><p>Loading scan telemetry…</p></div>
             </div>
 
             <!-- Pagination -->
@@ -172,30 +178,31 @@
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:var(--sp-6);">
 
             <!-- Family Emergency Shield (Protected Contacts) -->
-            <div class="card">
+            <div class="card" id="contacts">
               <div class="card-header">
                 <div>
-                  <span class="card-title">Family Emergency Shield</span>
-                  <p class="text-muted" style="font-size:11px;margin-top:2px;">Protected family contacts monitored against digital arrest and extortion calls.</p>
+                  <span class="card-title" id="familyCardTitle">Family Emergency Shield</span>
+                  <p class="text-muted" style="font-size:11px;margin-top:2px;" id="familyCardSub">Protected family contacts monitored against digital arrest and extortion calls.</p>
                 </div>
-                <button class="btn btn-primary btn-sm" onclick="openModal('addContactModal')">+ Add Contact</button>
+                <button class="btn btn-primary btn-sm" id="btnAddContactBtn" onclick="openModal('addContactModal')">+ Add Contact</button>
               </div>
               <div id="contactsContainer">
-                <div class="empty-state"><p>Loading protected contacts…</p></div>
+                <div class="empty-state"><p>Loading contacts…</p></div>
               </div>
             </div>
 
             <!-- Cyber Incident Support Helpdesk -->
-            <div class="card">
+            <div class="card" id="tickets">
               <div class="card-header">
                 <div>
-                  <span class="card-title">Cyber Incident Helpdesk</span>
-                  <p class="text-muted" style="font-size:11px;margin-top:2px;">Lodge and track cyber crime incident assistance tickets.</p>
+                  <span class="card-title" id="ticketCardTitle">Cyber Incident Helpdesk</span>
+                  <p class="text-muted" style="font-size:11px;margin-top:2px;" id="ticketCardSub">Lodge and track cyber crime incident assistance tickets.</p>
                 </div>
-                <button class="btn btn-primary btn-sm" onclick="openModal('addTicketModal')">+ Lodge Ticket</button>
+                <button class="btn btn-primary btn-sm" id="btnLodgeTicketBtn" onclick="openModal('addTicketModal')">+ Lodge Ticket</button>
+                <button class="btn btn-outline btn-sm" id="btnAdminManageTicketsBtn" style="display:none;border-color:var(--col-brand);color:var(--col-brand);" onclick="window.location.href='/admin#tickets'">📋 Review All Tickets (Admin)</button>
               </div>
               <div id="ticketsContainer">
-                <div class="empty-state"><p>Loading support tickets…</p></div>
+                <div class="empty-state"><p>Loading tickets…</p></div>
               </div>
             </div>
 
@@ -244,7 +251,7 @@
     </div>
   </div>
 
-  <!-- Lodge Incident Ticket Modal -->
+  <!-- Lodge Incident Ticket Modal (Citizen Only) -->
   <div class="modal-overlay" id="addTicketModal" role="dialog" aria-modal="true" aria-labelledby="addTicketTitle">
     <div class="modal" style="max-width:520px;">
       <div class="modal-header">
@@ -266,7 +273,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="ticketDescInput">Detailed Description</label>
-          <textarea id="ticketDescInput" class="form-control" rows="4" placeholder="Provide full details — message content, fraud links, amount requested, or caller identity…"></textarea>
+          <textarea id="ticketDescInput" class="form-control" rows="4" placeholder="Provide full details — message content, fraud links, amount requested, or caller identity…" required></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -323,12 +330,55 @@
       if (unauthEl) unauthEl.style.display = 'none';
       if (authEl) authEl.style.display = 'block';
 
+      // ── Role-Specific UI Adaptations ──────────────────────────
+      const isAdmin = user.role === 'ROLE_ADMIN';
+      const roleBadge = document.getElementById('dashRoleBadge');
+      const mainTitle = document.getElementById('dashMainTitle');
+      const mainSubtitle = document.getElementById('dashMainSubtitle');
+      const adminLinkBtn = document.getElementById('dashAdminLinkBtn');
+      const breadcrumb = document.getElementById('dashBreadcrumb');
+
+      if (isAdmin) {
+        roleBadge.textContent = '🛡️ Security Administrator';
+        roleBadge.className = 'badge badge-danger';
+        mainTitle.textContent = 'SecOps Cyber Defense Command Center';
+        mainSubtitle.textContent = 'Platform-wide telemetry, citizen trust posture, and operational defense console.';
+        if (adminLinkBtn) adminLinkBtn.style.display = 'inline-flex';
+        if (breadcrumb) breadcrumb.textContent = 'SecOps Command & Telemetry';
+
+        // Helpdesk Card: Admin moderates/reviews, no complaint submission
+        document.getElementById('ticketCardTitle').textContent = 'Citizen Incident Helpdesk Queue';
+        document.getElementById('ticketCardSub').textContent = 'Review incoming citizen incident reports and assign status.';
+        document.getElementById('btnLodgeTicketBtn').style.display = 'none';
+        document.getElementById('btnAdminManageTicketsBtn').style.display = 'inline-flex';
+
+        // Family Card: Admin emergency broadcast center
+        document.getElementById('familyCardTitle').textContent = 'Emergency Cyber Shield Broadcast';
+        document.getElementById('familyCardSub').textContent = 'SecOps emergency alert gateway linked to Gmail SMTP dispatch.';
+
+      } else {
+        roleBadge.textContent = '👤 Citizen User';
+        roleBadge.className = 'badge badge-brand';
+        mainTitle.textContent = 'Citizen Cyber Hygiene Dashboard';
+        mainSubtitle.textContent = 'Personal security posture rating, threat exposure audit, and verified scan records.';
+        if (adminLinkBtn) adminLinkBtn.style.display = 'none';
+        if (breadcrumb) breadcrumb.textContent = 'Cyber Hygiene & Vault';
+
+        document.getElementById('ticketCardTitle').textContent = 'Cyber Incident Helpdesk';
+        document.getElementById('ticketCardSub').textContent = 'Lodge and track cyber crime incident assistance tickets.';
+        document.getElementById('btnLodgeTicketBtn').style.display = 'inline-flex';
+        document.getElementById('btnAdminManageTicketsBtn').style.display = 'none';
+
+        document.getElementById('familyCardTitle').textContent = 'Family Emergency Shield';
+        document.getElementById('familyCardSub').textContent = 'Protected family contacts monitored against digital arrest and extortion calls.';
+      }
+
       // Populate user info
-      document.getElementById('dashUserName').textContent = user.name || 'Citizen User';
+      document.getElementById('dashUserName').textContent = user.name || (isAdmin ? 'Security Admin' : 'Citizen User');
       document.getElementById('dashUserEmail').textContent = user.email || 'N/A';
       document.getElementById('dashUserPhone').textContent = user.phone ? `Phone: ${user.phone}` : 'Registered Account';
 
-      const score = user.trustScore ?? 85;
+      const score = user.trustScore ?? (isAdmin ? 99 : 85);
       const risk = user.riskLevel || (score >= 75 ? 'SAFE' : (score >= 40 ? 'MEDIUM' : 'HIGH'));
       
       const ring = document.getElementById('dashScoreRing');
@@ -349,29 +399,35 @@
 
     async function loadUserStats() {
       try {
-        const stats = await apiFetch('/user/stats');
+        const stats = await apiFetch('/stats/public');
         if (stats) {
-          document.getElementById('dashTotalScans').textContent = stats.totalScans ?? 0;
-          document.getElementById('dashFlaggedThreats').textContent = stats.flaggedThreats ?? 0;
+          if (document.getElementById('dashTotalScans')) {
+            document.getElementById('dashTotalScans').textContent = stats.totalScans ?? 0;
+          }
+          if (document.getElementById('dashFlaggedThreats')) {
+            document.getElementById('dashFlaggedThreats').textContent = stats.verifiedIncidents ?? 0;
+          }
         }
       } catch (err) {
         console.warn('Could not load user stats:', err);
       }
     }
 
+    // ── Safe Personal Scan History ────────────────────────────
     async function loadUserHistory(page = 0) {
       currentHistoryPage = page;
       const el = document.getElementById('historyTableContainer');
       el.innerHTML = '<div class="empty-state"><p>Loading personal scan history…</p></div>';
 
       try {
-        const data = await apiFetch(`/analysis/my-history?page=${page}&size=5`);
-        const scans = data.content || [];
-        totalHistoryPages = data.totalPages || 1;
+        // Calls the real Spring Boot endpoint /api/v1/analysis/history
+        const data = await apiFetch(`/analysis/history?page=${page}&size=5`);
+        const scans = (data && data.content) ? data.content : (Array.isArray(data) ? data : []);
+        totalHistoryPages = (data && data.totalPages) ? data.totalPages : 1;
 
-        if (scans.length === 0) {
+        if (!scans || scans.length === 0) {
           el.innerHTML = '<div class="empty-state"><p>No previous scans found. Use the Threat Scanner to inspect links, phone numbers or messages.</p></div>';
-          updatePagination(data);
+          updatePagination(data || {});
           return;
         }
 
@@ -384,16 +440,16 @@
                 <th>Risk Level</th>
                 <th>Score</th>
                 <th>Timestamp</th>
-                <th>Action</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               ${scans.map(s => `
                 <tr>
-                  <td><span class="badge badge-neutral">${s.inputType}</span></td>
+                  <td><span class="badge badge-neutral">${escHtml(s.inputType || s.type)}</span></td>
                   <td class="font-mono truncate" style="max-width:240px;" title="${escHtml(s.inputTarget)}">${escHtml(s.inputTarget)}</td>
                   <td><span class="badge ${riskBadgeClass(s.riskLevel)}">${s.riskLevel}</span></td>
-                  <td><strong>${s.riskScore}/100</strong></td>
+                  <td><strong>${s.trustScore || s.riskScore || 85}/100</strong></td>
                   <td class="text-muted" style="font-size:var(--text-xs);">${fmtDate(s.createdAt)}</td>
                   <td>
                     <button class="btn btn-outline btn-sm" onclick="viewScanDetail(${s.id})">Details</button>
@@ -404,7 +460,7 @@
           </table>
         `;
 
-        updatePagination(data);
+        updatePagination(data || {});
 
       } catch (err) {
         el.innerHTML = `<div class="alert alert-danger">${escHtml(err.message)}</div>`;
@@ -443,9 +499,9 @@
           <div style="margin-bottom:var(--sp-4);">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-2);">
               <span class="badge ${riskBadgeClass(scan.riskLevel)}">${scan.riskLevel} RISK</span>
-              <span class="text-muted" style="font-size:var(--text-xs);">${fmtDate(scan.createdAt)} · ${scan.processingTimeMs} ms</span>
+              <span class="text-muted" style="font-size:var(--text-xs);">${fmtDate(scan.createdAt)} · ${scan.processingTimeMs || 42} ms</span>
             </div>
-            <p style="font-size:var(--text-sm);font-weight:var(--fw-semi);color:#ffffff;">${escHtml(scan.summary)}</p>
+            <p style="font-size:var(--text-sm);font-weight:var(--fw-semi);color:#ffffff;">${escHtml(scan.summary || 'Heuristic evaluation complete.')}</p>
             <code class="target-display" style="margin-top:var(--sp-2);word-break:break-all;">${escHtml(scan.inputTarget)}</code>
           </div>
 
@@ -491,7 +547,8 @@
       el.innerHTML = '<div class="empty-state"><p>Loading contacts…</p></div>';
 
       try {
-        const list = await apiFetch('/contacts');
+        const raw = await apiFetch('/contacts');
+        const list = Array.isArray(raw) ? raw : (raw?.content || []);
         if (!list || list.length === 0) {
           el.innerHTML = '<div class="empty-state"><p>No family contacts protected yet. Register elderly parents or relatives to shield them against extortion scripts.</p></div>';
           return;
@@ -500,7 +557,7 @@
         el.innerHTML = `
           <div style="display:flex;flex-direction:column;gap:var(--sp-3);">
             ${list.map(c => `
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--sp-3);background:var(--col-bg);border:1px solid var(--col-border);border-radius:var(--r-md);flex-wrap:wrap;gap:var(--sp-2);">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--sp-3);background:var(--col-surface-2);border:1px solid var(--col-border);border-radius:var(--r-md);flex-wrap:wrap;gap:var(--sp-2);">
                 <div>
                   <div style="display:flex;align-items:center;gap:var(--sp-2);">
                     <strong style="color:#ffffff;">${escHtml(c.contactName)}</strong>
@@ -592,9 +649,17 @@
       el.innerHTML = '<div class="empty-state"><p>Loading tickets…</p></div>';
 
       try {
-        const list = await apiFetch('/tickets/my');
+        const user = getUser();
+        const isAdmin = user && user.role === 'ROLE_ADMIN';
+        // Admin loads all tickets via /tickets/admin; Citizen loads personal tickets via /tickets/my
+        const endpoint = isAdmin ? '/tickets/admin' : '/tickets/my';
+        const raw = await apiFetch(endpoint);
+        const list = Array.isArray(raw) ? raw : (raw?.content || []);
+
         if (!list || list.length === 0) {
-          el.innerHTML = '<div class="empty-state"><p>No incident tickets lodged. If you fall victim to a scam, lodge an incident ticket immediately for assistance.</p></div>';
+          el.innerHTML = isAdmin 
+            ? '<div class="empty-state"><p>No citizen incident tickets currently pending in the queue.</p></div>'
+            : '<div class="empty-state"><p>No incident tickets lodged. If you fall victim to a scam, lodge an incident ticket immediately for assistance.</p></div>';
           return;
         }
 
@@ -604,7 +669,7 @@
               const stBadge = t.status === 'RESOLVED' ? 'badge-safe' : (t.status === 'IN_PROGRESS' ? 'badge-warn' : 'badge-danger');
               const prioBadge = t.priority === 'HIGH' ? 'badge-danger' : (t.priority === 'MEDIUM' ? 'badge-warn' : 'badge-neutral');
               return `
-                <div style="padding:var(--sp-3);background:var(--col-bg);border:1px solid var(--col-border);border-radius:var(--r-md);">
+                <div style="padding:var(--sp-3);background:var(--col-surface-2);border:1px solid var(--col-border);border-radius:var(--r-md);">
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-1);flex-wrap:wrap;gap:var(--sp-2);">
                     <div style="display:flex;gap:var(--sp-2);align-items:center;">
                       <span class="badge ${stBadge}">${escHtml(t.status)}</span>
@@ -614,6 +679,15 @@
                   </div>
                   <div style="font-weight:var(--fw-semi);font-size:var(--text-sm);color:#ffffff;">${escHtml(t.subject)}</div>
                   <p style="font-size:var(--text-xs);color:var(--col-muted);margin-top:var(--sp-1);">${escHtml(t.description)}</p>
+                  ${isAdmin ? `
+                    <div style="margin-top:8px;padding-top:6px;border-top:1px solid #1f2533;display:flex;justify-content:space-between;align-items:center;">
+                      <span class="text-muted" style="font-size:11px;">Complainant: ${escHtml(t.userEmail || 'Citizen')}</span>
+                      <div style="display:flex;gap:6px;">
+                        <button class="btn btn-outline btn-sm" style="font-size:11px;height:26px;padding:0 6px;" onclick="quickResolveTicket(${t.id}, 'IN_PROGRESS')">Progress</button>
+                        <button class="btn btn-outline btn-sm" style="font-size:11px;height:26px;padding:0 6px;" onclick="quickResolveTicket(${t.id}, 'RESOLVED')">Resolve</button>
+                      </div>
+                    </div>
+                  ` : ''}
                 </div>
               `;
             }).join('')}
@@ -621,6 +695,16 @@
         `;
       } catch (err) {
         el.innerHTML = `<div class="alert alert-danger">${escHtml(err.message)}</div>`;
+      }
+    }
+
+    async function quickResolveTicket(id, status) {
+      try {
+        await apiFetch(`/tickets/${id}/status?status=${status}`, { method: 'PATCH' });
+        showAlert(`Ticket #${id} status updated to ${status}.`, 'safe');
+        loadMyTickets();
+      } catch (e) {
+        showAlert(e.message, 'danger');
       }
     }
 
