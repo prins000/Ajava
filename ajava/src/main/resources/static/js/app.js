@@ -1,6 +1,7 @@
 /* ============================================================
    Authentica — Client Engine
-   Handles auth, API calls, scan rendering, community feed.
+   Handles auth, API calls, scan rendering, community feed,
+   and dynamic Role-Based Access Control (RBAC).
    No jQuery. No framework. Pure modern JavaScript.
    ============================================================ */
 
@@ -10,7 +11,11 @@ const API_BASE = '/api/v1';
 function getToken() { return localStorage.getItem('ac_token'); }
 function getUser()  {
   const s = localStorage.getItem('ac_user');
-  return s ? JSON.parse(s) : null;
+  try {
+    return s ? JSON.parse(s) : null;
+  } catch(e) {
+    return null;
+  }
 }
 
 function setAuth(token, user) {
@@ -18,6 +23,10 @@ function setAuth(token, user) {
   localStorage.setItem('ac_user', JSON.stringify(user));
   refreshNavAuth();
   window.dispatchEvent(new CustomEvent('auth-changed', { detail: { token, user } }));
+}
+
+function saveAuth(token, user) {
+  setAuth(token, user);
 }
 
 function clearAuth() {
@@ -37,12 +46,13 @@ function logout() {
   }
 }
 
+// ── Dynamic Role-Based Navigation & Topbar Sync ─────────────
 function refreshNavAuth() {
   const user = getUser();
-  const navActions = document.querySelector('.nav-actions');
-  const navLinks = document.querySelector('.nav-links');
+  const pathname = window.location.pathname;
 
-  // Sync nav links
+  // 1. Sync legacy top nav links if present
+  const navLinks = document.querySelector('.nav-links');
   if (navLinks) {
     let dashLink = document.getElementById('navLinkDashboard');
     let adminLink = document.getElementById('navLinkAdmin');
@@ -53,8 +63,8 @@ function refreshNavAuth() {
           const a = document.createElement('a');
           a.id = 'navLinkAdmin';
           a.href = '/admin';
-          a.className = 'nav-link' + (window.location.pathname === '/admin' ? ' active' : '');
-          a.textContent = 'Admin Portal';
+          a.className = 'nav-link' + (pathname === '/admin' ? ' active' : '');
+          a.textContent = 'Admin Console';
           navLinks.appendChild(a);
         }
       } else {
@@ -62,7 +72,7 @@ function refreshNavAuth() {
           const a = document.createElement('a');
           a.id = 'navLinkDashboard';
           a.href = '/dashboard';
-          a.className = 'nav-link' + (window.location.pathname === '/dashboard' ? ' active' : '');
+          a.className = 'nav-link' + (pathname === '/dashboard' ? ' active' : '');
           a.textContent = 'Dashboard';
           navLinks.appendChild(a);
         }
@@ -73,7 +83,8 @@ function refreshNavAuth() {
     }
   }
 
-  // Sync nav actions
+  // 2. Sync legacy nav actions
+  const navActions = document.querySelector('.nav-actions');
   if (navActions) {
     let authBox = document.getElementById('navAuthBox');
     if (!authBox) {
@@ -88,21 +99,256 @@ function refreshNavAuth() {
     if (user) {
       const roleLabel = user.role === 'ROLE_ADMIN' ? 'Admin' : (user.trustScore ? `${user.trustScore} pts` : 'Citizen');
       authBox.innerHTML = `
-        <button class="btn btn-ghost btn-sm" onclick="openFeedbackModal()" title="Platform Feedback & Engine Rating">Feedback</button>
-        <a href="${user.role === 'ROLE_ADMIN' ? '/admin' : '/dashboard'}" class="badge badge-brand" style="text-decoration:none;cursor:pointer;font-weight:var(--fw-medium);padding:var(--sp-1) var(--sp-3);" title="Click to open dashboard">
+        <button class="btn btn-ghost btn-sm" onclick="openFeedbackModal()" title="Platform Feedback">Feedback</button>
+        <a href="${user.role === 'ROLE_ADMIN' ? '/admin' : '/dashboard'}" class="badge badge-brand" style="text-decoration:none;cursor:pointer;font-weight:var(--fw-medium);padding:var(--sp-1) var(--sp-3);">
           👤 ${escHtml(user.name)} (${roleLabel})
         </a>
         <button class="btn btn-ghost btn-sm" onclick="logout()">Sign Out</button>
       `;
     } else {
       authBox.innerHTML = `
-        <button class="btn btn-ghost btn-sm" onclick="openFeedbackModal()" title="Platform Feedback & Engine Rating">Feedback</button>
+        <button class="btn btn-ghost btn-sm" onclick="openFeedbackModal()" title="Platform Feedback">Feedback</button>
         <button class="btn btn-ghost btn-sm" onclick="openAuthModal('login')">Sign In</button>
         <button class="btn btn-outline btn-sm" onclick="openAuthModal('register')">Register</button>
       `;
     }
   }
+
+  // 3. Sync SOC Shell Topbar (.topbar-right)
+  const topbarRight = document.querySelector('.topbar-right');
+  if (topbarRight) {
+    let topbarAuth = document.getElementById('topbarAuthBox');
+    if (!topbarAuth) {
+      topbarAuth = document.createElement('div');
+      topbarAuth.id = 'topbarAuthBox';
+      topbarAuth.style.display = 'inline-flex';
+      topbarAuth.style.alignItems = 'center';
+      topbarAuth.style.gap = '10px';
+      topbarRight.appendChild(topbarAuth);
+    }
+
+    if (user) {
+      const isAdmin = user.role === 'ROLE_ADMIN';
+      topbarAuth.innerHTML = `
+        <button class="btn btn-ghost btn-sm" style="font-size:12px;height:30px;padding:0 10px;" onclick="openFeedbackModal()">⭐ Feedback</button>
+        <a href="${isAdmin ? '/admin' : '/dashboard'}" class="badge ${isAdmin ? 'badge-danger' : 'badge-safe'}" style="text-decoration:none;cursor:pointer;padding:5px 12px;font-size:11px;" title="View ${isAdmin ? 'Admin Console' : 'Citizen Dashboard'}">
+          ${isAdmin ? '🛡️ SecOps Admin' : '👤 Citizen'}: ${escHtml(user.name)}
+        </a>
+        <button class="btn btn-outline btn-sm" style="font-size:11px;height:30px;padding:0 10px;border-color:#333e52;" onclick="logout()">Sign Out</button>
+      `;
+    } else {
+      topbarAuth.innerHTML = `
+        <button class="btn btn-ghost btn-sm" style="font-size:12px;height:30px;padding:0 10px;" onclick="openFeedbackModal()">⭐ Feedback</button>
+        <button class="btn btn-outline btn-sm" style="font-size:12px;height:30px;padding:0 12px;" onclick="openAuthModal('login')">Sign In</button>
+        <button class="btn btn-primary btn-sm" style="font-size:12px;height:30px;padding:0 12px;" onclick="openAuthModal('register')">Register</button>
+      `;
+    }
+  }
+
+  // 4. Sync Left Sidebar Navigation by Role (.sidebar-nav)
+  const sidebarNav = document.querySelector('.sidebar-nav');
+  const sidebarCat = document.querySelector('.sidebar-category');
+  const sidebarNode = document.querySelector('.sidebar-node-pill');
+  const hash = window.location.hash;
+
+  if (sidebarNav) {
+    if (user && user.role === 'ROLE_ADMIN') {
+      if (sidebarCat) sidebarCat.textContent = 'SecOps Operations (Admin)';
+      if (sidebarNode) {
+        sidebarNode.innerHTML = `<span>Cluster-EU-West</span><span class="node-status" style="color:#ef4444;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ef4444;box-shadow:0 0 6px #ef4444;margin-right:4px;"></span>Admin Mode</span>`;
+      }
+      sidebarNav.innerHTML = `
+        <a href="/dashboard" class="sidebar-link ${pathname === '/dashboard' && !hash ? 'active' : ''}">
+          <span class="sidebar-link-icon">⊞</span> SecOps Console
+        </a>
+        <a href="/scanner" class="sidebar-link ${pathname === '/scanner' ? 'active' : ''}">
+          <span class="sidebar-link-icon">⌖</span> Threat Scanner
+        </a>
+        <a href="/community" class="sidebar-link ${pathname === '/community' ? 'active' : ''}">
+          <span class="sidebar-link-icon">⚡</span> Threat Radar
+        </a>
+        <a href="/admin#rules" class="sidebar-link ${pathname === '/admin' && (hash === '#rules' || !hash) ? 'active' : ''}">
+          <span class="sidebar-link-icon">🛡️</span> Rule Engine &amp; Policies
+        </a>
+        <a href="/admin#users" class="sidebar-link ${pathname === '/admin' && hash === '#users' ? 'active' : ''}">
+          <span class="sidebar-link-icon">👥</span> Citizen Directory
+        </a>
+        <a href="/admin#reports" class="sidebar-link ${pathname === '/admin' && hash === '#reports' ? 'active' : ''}">
+          <span class="sidebar-link-icon">📋</span> Incident Moderation
+        </a>
+        <a href="/admin#tickets" class="sidebar-link ${pathname === '/admin' && hash === '#tickets' ? 'active' : ''}">
+          <span class="sidebar-link-icon">🎫</span> Helpdesk Queue
+        </a>
+      `;
+    } else if (user) {
+      if (sidebarCat) sidebarCat.textContent = 'Citizen Operations';
+      if (sidebarNode) {
+        sidebarNode.innerHTML = `<span>Cluster-EU-West</span><span class="node-status">Protected</span>`;
+      }
+      sidebarNav.innerHTML = `
+        <a href="/dashboard" class="sidebar-link ${pathname === '/dashboard' && !hash ? 'active' : ''}">
+          <span class="sidebar-link-icon">⊞</span> My Dashboard
+        </a>
+        <a href="/scanner" class="sidebar-link ${pathname === '/scanner' ? 'active' : ''}">
+          <span class="sidebar-link-icon">⌖</span> Threat Scanner
+        </a>
+        <a href="/community" class="sidebar-link ${pathname === '/community' ? 'active' : ''}">
+          <span class="sidebar-link-icon">⚡</span> Threat Radar Feed
+        </a>
+        <a href="/dashboard#contacts" class="sidebar-link ${pathname === '/dashboard' && hash === '#contacts' ? 'active' : ''}">
+          <span class="sidebar-link-icon">🛡️</span> Family Shield
+        </a>
+        <a href="/dashboard#tickets" class="sidebar-link ${pathname === '/dashboard' && hash === '#tickets' ? 'active' : ''}">
+          <span class="sidebar-link-icon">🎫</span> Lodge Incident
+        </a>
+        <a href="/dashboard#history" class="sidebar-link ${pathname === '/dashboard' && hash === '#history' ? 'active' : ''}">
+          <span class="sidebar-link-icon">🔐</span> Forensic FIR Vault
+        </a>
+      `;
+    } else {
+      if (sidebarCat) sidebarCat.textContent = 'Public Operations';
+      if (sidebarNode) {
+        sidebarNode.innerHTML = `<span>Cluster-EU-West</span><span class="node-status">Guest</span>`;
+      }
+      sidebarNav.innerHTML = `
+        <a href="/scanner" class="sidebar-link ${pathname === '/scanner' ? 'active' : ''}">
+          <span class="sidebar-link-icon">⌖</span> Threat Scanner
+        </a>
+        <a href="/community" class="sidebar-link ${pathname === '/community' ? 'active' : ''}">
+          <span class="sidebar-link-icon">⚡</span> Live Threat Radar
+        </a>
+        <a href="/dashboard" class="sidebar-link ${pathname === '/dashboard' ? 'active' : ''}">
+          <span class="sidebar-link-icon">⊞</span> Citizen Dashboard
+        </a>
+        <a href="javascript:void(0)" onclick="openAuthModal('login')" class="sidebar-link">
+          <span class="sidebar-link-icon">🔑</span> Citizen Sign In
+        </a>
+      `;
+    }
+  }
 }
+
+function handleHashNavigation() {
+  const hash = window.location.hash;
+  if (!hash) return;
+  const target = document.querySelector(hash);
+  if (target) {
+    const yOffset = -75;
+    const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    target.style.transition = 'box-shadow 0.4s ease, border-color 0.4s ease';
+    target.style.boxShadow = '0 0 0 2px rgba(255, 77, 0, 0.7)';
+    target.style.borderColor = 'rgba(255, 77, 0, 0.9)';
+    setTimeout(() => {
+      target.style.boxShadow = '';
+      target.style.borderColor = '';
+    }, 2200);
+  }
+  updateSidebarActiveHash();
+}
+
+function updateSidebarActiveHash() {
+  const hash = window.location.hash;
+  const currentPath = window.location.pathname;
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    const href = link.getAttribute('href');
+    if (!href) return;
+    if (hash && href.endsWith(hash)) {
+      link.classList.add('active');
+    } else if (!hash && href === currentPath) {
+      link.classList.add('active');
+    } else if (hash && href === currentPath) {
+      link.classList.remove('active');
+    } else if (!hash && href.includes('#')) {
+      link.classList.remove('active');
+    }
+  });
+}
+
+window.addEventListener('hashchange', () => {
+  handleHashNavigation();
+  updateSidebarActiveHash();
+});
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.location.hash) {
+    setTimeout(handleHashNavigation, 250);
+  }
+});
+
+// ── Global Responsive Sidebar & Hamburger Management ────────
+function toggleSidebar(forceState) {
+  const sb = document.getElementById('appSidebar');
+  const shell = document.querySelector('.app-shell');
+  if (!sb) return;
+
+  let backdrop = document.getElementById('sidebarBackdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'sidebarBackdrop';
+    backdrop.className = 'sidebar-backdrop';
+    backdrop.onclick = () => toggleSidebar(false);
+    document.body.appendChild(backdrop);
+  }
+
+  const isMobile = window.innerWidth <= 992;
+  const toggleBtns = document.querySelectorAll('.topbar-toggle-btn');
+
+  if (isMobile) {
+    const shouldOpen = forceState !== undefined ? forceState : !sb.classList.contains('open');
+    if (shouldOpen) {
+      sb.classList.add('open');
+      backdrop.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      toggleBtns.forEach(btn => {
+        btn.innerHTML = '&times;';
+        btn.setAttribute('aria-label', 'Close navigation');
+      });
+    } else {
+      sb.classList.remove('open');
+      backdrop.classList.remove('active');
+      document.body.style.overflow = '';
+      toggleBtns.forEach(btn => {
+        btn.innerHTML = '&#9776;';
+        btn.setAttribute('aria-label', 'Open navigation');
+      });
+    }
+  } else {
+    // Desktop: collapse / expand
+    if (shell) {
+      const isCollapsed = shell.classList.toggle('sidebar-collapsed');
+      toggleBtns.forEach(btn => {
+        btn.innerHTML = isCollapsed ? '&#9776;' : '&times;';
+        btn.setAttribute('aria-label', isCollapsed ? 'Open navigation' : 'Close navigation');
+      });
+    }
+  }
+}
+
+// Close mobile sidebar on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    toggleSidebar(false);
+  }
+});
+
+// Auto-close mobile sidebar when clicking a navigation link
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('.sidebar-link, .sidebar-cta-btn');
+  if (link && window.innerWidth <= 992) {
+    toggleSidebar(false);
+  }
+});
+
+// Handle window resize cleanly
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 992) {
+    const sb = document.getElementById('appSidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sb) sb.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+});
 
 // ── Auth Modal (Login & Register) ────────────────────────────
 function initAuthModal() {
@@ -129,7 +375,7 @@ function initAuthModal() {
               <label class="form-label" for="loginPassword">Password</label>
               <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
             </div>
-            <div style="margin-bottom:var(--sp-4);background:var(--col-bg);padding:var(--sp-3);border-radius:var(--r-md);border:1px solid var(--col-border);">
+            <div style="margin-bottom:var(--sp-4);background:var(--col-surface-2);padding:var(--sp-3);border-radius:var(--r-md);border:1px solid var(--col-border);">
               <p class="form-hint" style="margin-bottom:var(--sp-2);color:var(--col-muted);">Quick 1-Click Demo Logins:</p>
               <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;">
                 <button type="button" class="btn btn-ghost btn-sm" style="font-size:var(--text-xs);" onclick="quickFillAuth('user@authentica.io','User@1234')">Citizen User</button>
@@ -220,7 +466,7 @@ async function handleLoginSubmit(e) {
     setAuth(data.accessToken, data.user);
     closeModal('authModalOverlay');
     showAlert(`Welcome back, ${data.user.name}!`, 'safe');
-    if (window.location.pathname === '/dashboard') {
+    if (window.location.pathname === '/dashboard' || window.location.pathname === '/admin') {
       window.location.reload();
     }
   } catch (err) {
@@ -257,16 +503,32 @@ async function handleRegisterSubmit(e) {
   }
 }
 
-// ── API wrapper ──────────────────────────────────────────────
+// ── Ultra-Robust API wrapper ─────────────────────────────────
 async function apiFetch(endpoint, opts = {}) {
   const token = getToken();
   const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(`${API_BASE}${endpoint}`, { ...opts, headers });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.message || 'Request failed');
-  return json.data;
+  const text = await res.text();
+  let json = null;
+  if (text && text.trim().length > 0) {
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      console.warn("Non-JSON API response body:", text.substring(0, 100));
+    }
+  }
+
+  if (!res.ok) {
+    const errorMsg = (json && (json.message || json.error)) || `HTTP ${res.status}: ${res.statusText || 'Request failed'}`;
+    throw new Error(errorMsg);
+  }
+
+  if (json && json.data !== undefined) {
+    return json.data;
+  }
+  return json;
 }
 
 // ── Scan API & rendering ─────────────────────────────────────
@@ -365,11 +627,11 @@ function renderScanResult(data) {
           <span class="text-muted" style="font-size:var(--text-xs);">Legal Forensic Compliance: Ready for Indian IT Act FIR filing</span>
           <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;">
             ${(a.riskLevel === 'HIGH' || a.riskLevel === 'CRITICAL') ? `
-              <button class="btn btn-outline btn-sm" onclick="broadcastEmergencyAlert('${escHtml(a.inputTarget)}', '${escHtml(a.type)}', ${a.threatScore || 85})" style="display:inline-flex;align-items:center;gap:6px;font-weight:var(--fw-bold);border-color:var(--col-danger);color:var(--col-danger);">
+              <button class="btn btn-outline btn-sm" id="emailAlertBtn" onclick="broadcastEmergencyAlert('${escHtml(a.inputTarget)}', '${escHtml(a.type)}', ${a.threatScore || 85})" style="display:inline-flex;align-items:center;gap:6px;font-weight:var(--fw-bold);border-color:var(--col-danger);color:var(--col-danger);">
                 🚨 Broadcast SOS to Family Shield
               </button>
             ` : ''}
-            <button class="btn btn-outline btn-sm" onclick="downloadForensicReport()" style="display:inline-flex;align-items:center;gap:6px;font-weight:var(--fw-bold);border-color:var(--col-brand);color:var(--col-brand);">
+            <button class="btn btn-outline btn-sm" id="exportEvidenceBtn" onclick="downloadForensicReport()" style="display:inline-flex;align-items:center;gap:6px;font-weight:var(--fw-bold);border-color:var(--col-brand);color:var(--col-brand);">
               📄 Export Cybercrime FIR Evidence Report (PDF)
             </button>
           </div>
@@ -597,7 +859,6 @@ function initThreatRadarMap(reports) {
     _threatMapInstance = null;
   }
 
-  // Centered on India with sleek dark theme
   _threatMapInstance = L.map('threatRadarMap', {
     center: [21.5, 78.9],
     zoom: 5,
@@ -606,17 +867,17 @@ function initThreatRadarMap(reports) {
     scrollWheelZoom: false
   });
 
-  // Free OpenStreetMap tiles (100% free, no API key, no watermark)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    attribution: '&copy; OpenStreetMap contributors',
     maxZoom: 19
   }).addTo(_threatMapInstance);
 
-  if (!reports || !reports.length) return;
+  const reportList = Array.isArray(reports) ? reports : (reports?.content || []);
+  if (!reportList || !reportList.length) return;
 
   const defaultCities = Object.values(METRO_COORDS);
 
-  reports.forEach((r, idx) => {
+  reportList.forEach((r, idx) => {
     let latlng = null;
     const city = (r.city || '').trim();
     if (METRO_COORDS[city]) {
@@ -628,7 +889,7 @@ function initThreatRadarMap(reports) {
       latlng = [base[0] + jitterLat, base[1] + jitterLng];
     }
 
-    const pinClass = r.type === 'CALL' ? 'radar-pin-CALL' : (r.type === 'UPI' ? 'radar-pin-UPI' : 'radar-pin-URL');
+    const pinClass = r.category === 'CALL' ? 'radar-pin-CALL' : (r.category === 'UPI' ? 'radar-pin-UPI' : 'radar-pin-URL');
     const customIcon = L.divIcon({
       className: 'custom-radar-pin',
       html: `<div class="radar-pin ${pinClass}"></div>`,
@@ -639,7 +900,7 @@ function initThreatRadarMap(reports) {
     const popupHtml = `
       <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:12px;color:#0f172a;min-width:200px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <span style="font-weight:bold;color:#be123c;">${escHtml(r.type)} INCIDENT</span>
+          <span style="font-weight:bold;color:#be123c;">${escHtml(r.category || r.type)} INCIDENT</span>
           <span style="font-size:10px;background:#e2e8f0;padding:1px 4px;border-radius:3px;">${escHtml(r.status)}</span>
         </div>
         <strong style="color:#0f172a;display:block;margin-bottom:4px;font-size:13px;">${escHtml(r.title)}</strong>
@@ -660,7 +921,7 @@ async function loadCommunityFeed() {
   el.innerHTML = '<div class="empty-state"><p>Loading reports…</p></div>';
   try {
     const data = await apiFetch('/community/feed');
-    const list = data.content || [];
+    const list = (data && data.content) ? data.content : (Array.isArray(data) ? data : []);
     if (!list.length) {
       el.innerHTML = '<div class="empty-state"><p>No reports on record yet.</p></div>';
       initThreatRadarMap([]);
@@ -675,24 +936,25 @@ async function loadCommunityFeed() {
 
 function feedCardHtml(r) {
   const bc = r.status === 'VERIFIED' ? 'badge-safe' : (r.status === 'PENDING' ? 'badge-warn' : 'badge-neutral');
+  const cat = r.category || r.type || 'THREAT';
   return `
     <div class="feed-card">
       <div class="feed-card-meta">
         <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;">
           <span class="badge ${bc}">${r.status}</span>
-          <span class="badge badge-neutral">${escHtml(r.type)}</span>
+          <span class="badge badge-neutral">${escHtml(cat)}</span>
           ${r.city ? `<span class="text-muted" style="font-size:var(--text-xs);">${escHtml(r.city)}${r.state ? ', ' + escHtml(r.state) : ''}</span>` : ''}
         </div>
         <span class="text-muted" style="font-size:var(--text-xs);">${fmtDate(r.createdAt)}</span>
       </div>
       <p class="feed-card-title">${escHtml(r.title)}</p>
       <p class="feed-card-body">${escHtml(r.description)}</p>
-      ${r.targetIdentifier ? `<code class="target-display" style="margin-bottom:var(--sp-3);">${escHtml(r.targetIdentifier)}</code>` : ''}
+      ${r.target ? `<code class="target-display" style="margin-bottom:var(--sp-3);">${escHtml(r.target)}</code>` : ''}
       <div class="feed-card-footer">
         <span class="text-muted" style="font-size:var(--text-xs);">Reported by ${escHtml(r.reporterName || 'Anonymous')}</span>
         <div style="display:flex;gap:var(--sp-2);">
-          <button class="vote-btn" onclick="vote(${r.id},'up')">▲ ${r.upvotes}</button>
-          <button class="vote-btn" onclick="vote(${r.id},'down')">▼ ${r.downvotes}</button>
+          <button class="vote-btn" onclick="vote(${r.id},'up')">▲ ${r.votesUp ?? r.upvotes ?? 0}</button>
+          <button class="vote-btn" onclick="vote(${r.id},'down')">▼ ${r.votesDown ?? r.downvotes ?? 0}</button>
         </div>
       </div>
     </div>`;
@@ -827,7 +1089,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initFeedbackModal();
   refreshNavAuth();
 
-  // Close modal on overlay click
   document.querySelectorAll('.modal-overlay').forEach(ov => {
     ov.addEventListener('click', e => {
       if (e.target === ov) ov.classList.remove('open');

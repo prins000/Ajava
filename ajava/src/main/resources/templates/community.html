@@ -4,81 +4,136 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Community threat intelligence — browse and contribute crowdsourced fraud and scam incident reports on Authentica.">
-  <title>Threat Feed | Authentica</title>
+  <title>Live Threat Feed &amp; Radar | Authentica SOC</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
 
-  <nav class="nav" role="navigation" aria-label="Main navigation">
-    <div class="nav-inner">
-      <a href="/" class="nav-brand" aria-label="Authentica home">
-        <div class="brand-icon" aria-hidden="true">A</div>
-        Authentica
+  <div class="app-shell">
+    <!-- ── Left Sidebar (Cyber SOC Theme matching screenshot) ── -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-header-row">
+        <a href="/" class="sidebar-brand">
+          <span class="sidebar-brand-dot"></span>
+          AUTHENTICA <span class="brand-sub">SECURE</span>
+        </a>
+        <button class="sidebar-close-btn" onclick="toggleSidebar(false)" aria-label="Close navigation">&times;</button>
+      </div>
+
+      <a href="/scanner" class="sidebar-cta-btn">
+        <span>New Operation</span>
+        <span class="cta-plus">+</span>
       </a>
-      <div class="nav-links">
-        <a href="/"          class="nav-link">Home</a>
-        <a href="/scanner"   class="nav-link">Scanner</a>
-        <a href="/community" class="nav-link active">Threat Feed</a>
-      </div>
-      <div class="nav-actions">
-        <a href="/scanner" class="btn btn-primary btn-sm">Scanner</a>
-      </div>
-    </div>
-  </nav>
 
-  <div id="globalAlert" class="alert" style="display:none;position:fixed;top:70px;right:var(--sp-6);z-index:300;max-width:400px;"></div>
+      <div class="sidebar-category">Operations</div>
+      <nav class="sidebar-nav">
+        <a href="/dashboard" class="sidebar-link">
+          <span class="sidebar-link-icon">⊞</span> Dashboard
+        </a>
+        <a href="/scanner" class="sidebar-link">
+          <span class="sidebar-link-icon">⌖</span> Vulnerabilities
+        </a>
+        <a href="/community" class="sidebar-link active">
+          <span class="sidebar-link-icon">⚡</span> Threats
+        </a>
+        <a href="/admin" class="sidebar-link">
+          <span class="sidebar-link-icon">🛡️</span> Compliance
+        </a>
+        <a href="/dashboard" class="sidebar-link">
+          <span class="sidebar-link-icon">🔐</span> Secure Vault
+        </a>
+        <a href="/admin" class="sidebar-link">
+          <span class="sidebar-link-icon">🔗</span> API Integrations
+        </a>
+      </nav>
 
-  <main>
-    <div class="container">
-      <!-- ── Live Attack Radar Ticker ────────────────────────── -->
-      <div style="background:#0f172a;border:1px solid #1e293b;border-radius:var(--r-md);padding:10px 16px;margin-bottom:var(--sp-6);display:flex;align-items:center;gap:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-        <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:bold;color:#ef4444;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;animation:pulse 1.5s infinite;"></span>
-          LIVE RADAR
+      <div class="sidebar-footer">
+        <div class="sidebar-node-pill">
+          <span>Cluster-EU-West</span>
+          <span class="node-status">Active</span>
         </div>
-        <div style="flex:1;overflow:hidden;white-space:nowrap;">
-          <div id="radarTicker" style="display:inline-block;animation:tickerMarquee 35s linear infinite;color:#94a3b8;font-size:12px;">
-            🚨 Digital Arrest extortion ring intercepted in Mumbai (CBI impersonation) &nbsp;&bull;&nbsp; ⚠️ Fake Electricity Disconnection SMS wave blocked in Ahmedabad &nbsp;&bull;&nbsp; 🚨 UPI Collect fraud trap intercepted in Bengaluru &nbsp;&bull;&nbsp; ⚠️ SBI Netbanking Phishing campaign blocked in New Delhi &nbsp;&bull;&nbsp; 🚨 Courier Customs extortion call blocked in Hyderabad
+      </div>
+    </aside>
+
+    <!-- ── Main Viewport ────────────────────────────────────── -->
+    <div class="app-viewport">
+      <!-- Topbar Header -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button class="topbar-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
+          <nav class="topbar-breadcrumbs">
+            <a href="/">🏠</a>
+            <span class="sep">/</span>
+            <a href="/community">Threats</a>
+            <span class="sep">/</span>
+            <span class="current">Live Geospatial Radar</span>
+          </nav>
+        </div>
+        <div class="topbar-right">
+          <div class="topbar-pulse-indicator">
+            <span class="topbar-pulse-dot"></span>
+            Radar Synchronized
+          </div>
+          <button class="topbar-export-btn" onclick="openModal('reportModal')">
+            + Report Incident
+          </button>
+        </div>
+      </header>
+
+      <div id="globalAlert" class="alert" style="display:none;position:fixed;top:70px;right:var(--sp-6);z-index:300;max-width:400px;"></div>
+
+      <main class="app-content">
+        <!-- ── Live Attack Radar Ticker ────────────────────────── -->
+        <div style="background:#0e1118;border:1px solid #1f2533;border-radius:var(--r-md);padding:10px 16px;margin-bottom:var(--sp-6);display:flex;align-items:center;gap:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.4);">
+          <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:bold;color:#ef4444;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;animation:pulse 1.5s infinite;"></span>
+            LIVE RADAR
+          </div>
+          <div style="flex:1;overflow:hidden;white-space:nowrap;">
+            <div id="radarTicker" style="display:inline-block;animation:tickerMarquee 35s linear infinite;color:#94a3b8;font-size:12px;">
+              🚨 Digital Arrest extortion ring intercepted in Mumbai (CBI impersonation) &nbsp;&bull;&nbsp; ⚠️ Fake Electricity Disconnection SMS wave blocked in Ahmedabad &nbsp;&bull;&nbsp; 🚨 UPI Collect fraud trap intercepted in Bengaluru &nbsp;&bull;&nbsp; ⚠️ SBI Netbanking Phishing campaign blocked in New Delhi &nbsp;&bull;&nbsp; 🚨 Courier Customs extortion call blocked in Hyderabad
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between;gap:var(--sp-4);flex-wrap:wrap;">
-        <div>
-          <h1 class="page-title">Community Threat Feed &amp; Geolocation Radar</h1>
-          <p class="page-subtitle">Crowdsourced fraud reports, real-time geographic telemetry &amp; consensus verification.</p>
-        </div>
-        <button class="btn btn-primary" onclick="openModal('reportModal')">+ Submit Incident</button>
-      </div>
-
-      <!-- ── Live Geospatial Threat Map ───────────────────────── -->
-      <div class="card" style="margin-bottom:var(--sp-8);padding:0;overflow:hidden;border:1px solid var(--col-border);">
-        <div style="padding:var(--sp-4);border-bottom:1px solid var(--col-border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-2);">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:var(--sp-4);flex-wrap:wrap;margin-bottom:var(--sp-6);">
           <div>
-            <h2 class="card-title" style="font-size:var(--text-base);">🗺️ Live Cyber Threat Geolocation Radar</h2>
-            <p class="text-muted" style="font-size:var(--text-xs);margin-top:2px;">Real-time spatial visualization of active cybercrime hotspots and citizen incident telemetry across India.</p>
+            <h1 style="font-size:1.85rem;font-weight:var(--fw-bold);color:#ffffff;letter-spacing:-0.02em;">Community Threat Feed &amp; Geolocation Radar</h1>
+            <p class="text-muted" style="font-size:13px;margin-top:2px;">Crowdsourced fraud reports, real-time geographic telemetry &amp; consensus verification.</p>
           </div>
-          <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;">
-            <span class="badge badge-danger">● Phishing / URL Attack</span>
-            <span class="badge" style="background:#fef3c7;color:#92400e;">● UPI Payment Scam</span>
-            <span class="badge" style="background:#f3e8ff;color:#6b21a8;">● Extortion / Digital Arrest</span>
-          </div>
+          <button class="btn btn-primary" onclick="openModal('reportModal')">+ Submit Incident Report</button>
         </div>
-        <div id="threatRadarMap" style="height:360px;width:100%;background:#090d16;"></div>
-      </div>
 
-      <div id="communityFeed">
-        <div class="empty-state"><p>Loading reports…</p></div>
-      </div>
+        <!-- ── Live Geospatial Threat Map ───────────────────────── -->
+        <div class="card" style="margin-bottom:var(--sp-8);padding:0;overflow:hidden;border:1px solid #1f2533;">
+          <div style="padding:var(--sp-4) var(--sp-5);border-bottom:1px solid #1f2533;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-2);background:#0e1219;">
+            <div>
+              <span class="card-title" style="font-size:var(--text-base);color:#ffffff;">🗺️ Live Cyber Threat Geolocation Radar</span>
+              <p class="text-muted" style="font-size:11px;margin-top:2px;">Real-time spatial visualization of active cybercrime hotspots and citizen incident telemetry across India.</p>
+            </div>
+            <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;">
+              <span class="soc-chip-critical">● Phishing Link</span>
+              <span class="badge badge-warn">● UPI Collect Trap</span>
+              <span class="badge" style="background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.3);">● Digital Arrest Extortion</span>
+            </div>
+          </div>
+          <div id="threatRadarMap" style="height:380px;width:100%;background:#090d16;"></div>
+        </div>
+
+        <!-- Incident Feed Cards -->
+        <div id="communityFeed">
+          <div class="empty-state"><p>Loading reports…</p></div>
+        </div>
+      </main>
     </div>
-  </main>
+  </div>
 
   <!-- ── Submit Report Modal ────────────────────────────────── -->
   <div class="modal-overlay" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
     <div class="modal" style="max-width:600px;">
       <div class="modal-header">
-        <h2 class="modal-title" id="reportTitle">Submit incident report</h2>
+        <h2 class="modal-title" id="reportTitle">Submit Incident Report</h2>
         <button class="modal-close" onclick="closeModal('reportModal')" aria-label="Close">&times;</button>
       </div>
       <div class="modal-body">
@@ -90,84 +145,187 @@
           <label class="form-label" for="repType">Category</label>
           <select id="repType" class="form-control">
             <option value="SMS">SMS / Smishing</option>
-            <option value="CALL">Fraud voice call</option>
-            <option value="URL">Phishing website / link</option>
-            <option value="UPI">UPI / Payment fraud</option>
-            <option value="EMAIL">Phishing email</option>
+            <option value="CALL">Fraud Voice Call</option>
+            <option value="URL">Phishing Website / Link</option>
+            <option value="UPI">UPI / Payment Fraud</option>
+            <option value="EMAIL">Phishing Email</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label" for="repTitle">Incident title</label>
-          <input type="text" id="repTitle" class="form-control" placeholder="e.g. Fake SBI netbanking link shared via WhatsApp">
+          <label class="form-label" for="repTitle">Incident Title</label>
+          <input type="text" id="repTitle" class="form-control" placeholder="Brief summary of the scam attempt" required>
         </div>
         <div class="form-group">
-          <label class="form-label" for="repTarget">Suspicious phone / URL / UPI ID</label>
-          <input type="text" id="repTarget" class="form-control" placeholder="+91 98765 43210 or http://example-phish.com">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="repDesc">Incident details</label>
-          <textarea id="repDesc" class="form-control" placeholder="Describe the scam — what happened, what was claimed, what you were asked to do…"></textarea>
+          <label class="form-label" for="repTarget">Target / Identifier</label>
+          <input type="text" id="repTarget" class="form-control" placeholder="URL, phone number or UPI handle involved" required>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);">
           <div class="form-group">
-            <label class="form-label" for="repCity">City</label>
-            <input type="text" id="repCity" class="form-control" placeholder="Ahmedabad">
+            <label class="form-label" for="repCity">City / Location</label>
+            <input type="text" id="repCity" class="form-control" placeholder="e.g. Mumbai, New Delhi, Bengaluru">
           </div>
           <div class="form-group">
             <label class="form-label" for="repState">State</label>
-            <input type="text" id="repState" class="form-control" placeholder="Gujarat">
+            <input type="text" id="repState" class="form-control" placeholder="e.g. Maharashtra, Delhi, Karnataka">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="repTags">Tags <span class="text-muted" style="font-weight:normal;">(comma-separated)</span></label>
-          <input type="text" id="repTags" class="form-control" placeholder="electricity scam, urgent, impersonation">
+          <label class="form-label" for="repDesc">Description &amp; Evidence</label>
+          <textarea id="repDesc" class="form-control" rows="4" placeholder="Describe the message, call scenario, demands made, or any monetary loss incurred…" required></textarea>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('reportModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="submitReport()">Submit</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('reportModal')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="submitReport()">Submit Report</button>
       </div>
     </div>
   </div>
 
-  <footer>
-    <div class="footer-inner">
-      <p class="footer-copy">&copy; 2026 Authentica Inc. All rights reserved.</p>
-      <div class="footer-links">
-        <a href="/scanner">Scanner</a>
-      </div>
-    </div>
-  </footer>
-
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="/js/app.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', loadCommunityFeed);
+    let radarMap = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCommunityFeed();
+      initThreatRadarMap();
+    });
+
+
+    function initThreatRadarMap() {
+      try {
+        radarMap = L.map('threatRadarMap', {
+          zoomControl: true,
+          attributionControl: false
+        }).setView([20.5937, 78.9629], 5);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 18
+        }).addTo(radarMap);
+
+        const hotspots = [
+          { lat: 19.0760, lng: 72.8777, city: 'Mumbai', type: 'CALL', label: 'CBI Digital Arrest Extortion Call Ring', risk: 'CRITICAL', count: 48 },
+          { lat: 28.6139, lng: 77.2090, city: 'New Delhi', type: 'URL', label: 'Income Tax Refund Phishing APK', risk: 'HIGH', count: 35 },
+          { lat: 12.9716, lng: 77.5946, city: 'Bengaluru', type: 'UPI', label: 'Deceptive OLX QR Collect Fraud', risk: 'CRITICAL', count: 62 },
+          { lat: 23.0225, lng: 72.5714, city: 'Ahmedabad', type: 'SMS', label: 'Electricity Disconnection SMS Wave', risk: 'HIGH', count: 29 },
+          { lat: 17.3850, lng: 78.4867, city: 'Hyderabad', type: 'CALL', label: 'FedEx Parcel Narcotics Extortion Trap', risk: 'CRITICAL', count: 41 },
+          { lat: 22.5726, lng: 88.3639, city: 'Kolkata', type: 'UPI', label: 'Fake Job Work-from-Home Telegram Syndicate', risk: 'HIGH', count: 53 },
+          { lat: 13.0827, lng: 80.2707, city: 'Chennai', type: 'URL', label: 'SBI KYC Update Spoofed Domain', risk: 'HIGH', count: 22 }
+        ];
+
+        hotspots.forEach(h => {
+          const pinClass = `radar-pin radar-pin-${h.type}`;
+          const customIcon = L.divIcon({
+            className: 'custom-radar-marker',
+            html: `<div class="${pinClass}" title="${h.city}: ${h.label}"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+          });
+
+          const marker = L.marker([h.lat, h.lng], { icon: customIcon }).addTo(radarMap);
+          marker.bindPopup(`
+            <div style="font-family:var(--font-sans);min-width:180px;color:#1e293b;">
+              <div style="font-weight:bold;font-size:13px;margin-bottom:2px;color:#0f172a;">📍 ${h.city} Threat Incident</div>
+              <div style="font-size:11px;color:#dc2626;font-weight:600;margin-bottom:4px;">${h.risk} SEVERITY &bull; ${h.count} Interceptions</div>
+              <div style="font-size:12px;color:#334155;">${h.label}</div>
+            </div>
+          `);
+        });
+
+      } catch (err) {
+        console.warn('Map initialization notice:', err);
+      }
+    }
+
+    async function loadCommunityFeed() {
+      const el = document.getElementById('communityFeed');
+      try {
+        const data = await apiFetch('/community/feed');
+        const reports = (data && data.content) ? data.content : (Array.isArray(data) ? data : []);
+        if (!reports || reports.length === 0) {
+          el.innerHTML = '<div class="empty-state"><p>No reports found. Be the first to submit a fraud alert!</p></div>';
+          return;
+        }
+
+        el.innerHTML = reports.map(r => `
+          <div class="feed-card">
+            <div class="feed-card-meta">
+              <div style="display:flex;align-items:center;gap:var(--sp-2);">
+                <span class="badge ${badgeClassForType(r.category)}">${escHtml(r.category)}</span>
+                <span class="text-muted" style="font-size:var(--text-xs);">${fmtDate(r.createdAt)}</span>
+              </div>
+              <span class="badge ${r.status === 'VERIFIED' ? 'badge-safe' : 'badge-neutral'}">${r.status || 'UNVERIFIED'}</span>
+            </div>
+            <h3 class="feed-card-title">${escHtml(r.title)}</h3>
+            <p class="feed-card-body">${escHtml(r.description)}</p>
+            <div class="feed-card-footer">
+              <code class="target-display" style="padding:2px 8px;font-size:var(--text-xs);">${escHtml(r.target)}</code>
+              <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                <span class="text-muted" style="font-size:var(--text-xs);">${r.votesUp || 0} confirmations</span>
+                <button class="vote-btn" onclick="voteReport(${r.id}, 'up')">👍 Confirm</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        el.innerHTML = `<div class="alert alert-danger">${escHtml(err.message)}</div>`;
+      }
+    }
+
+    function badgeClassForType(type) {
+      if (type === 'CALL') return 'badge-warn';
+      if (type === 'URL')  return 'badge-danger';
+      if (type === 'UPI')  return 'badge-brand';
+      return 'badge-neutral';
+    }
+
+    async function voteReport(id, dir) {
+      try {
+        await apiFetch(`/community/reports/${id}/vote?direction=${dir}`, { method: 'POST' });
+        loadCommunityFeed();
+      } catch (err) {
+        showAlert(err.message, 'danger');
+      }
+    }
 
     async function submitReport() {
-      const reporterName     = document.getElementById('repAuthor').value.trim() || 'Anonymous';
-      const type             = document.getElementById('repType').value;
-      const title            = document.getElementById('repTitle').value;
-      const targetIdentifier = document.getElementById('repTarget').value;
-      const description      = document.getElementById('repDesc').value;
-      const city             = document.getElementById('repCity').value;
-      const state            = document.getElementById('repState').value;
-      const tags             = document.getElementById('repTags').value;
+      const author = document.getElementById('repAuthor').value.trim();
+      const category = document.getElementById('repType').value;
+      const title = document.getElementById('repTitle').value.trim();
+      const target = document.getElementById('repTarget').value.trim();
+      const city = document.getElementById('repCity').value.trim();
+      const state = document.getElementById('repState').value.trim();
+      const description = document.getElementById('repDesc').value.trim();
 
-      if (!title || !description) {
-        showAlert('Please provide at least a title and description.', 'warn');
+      if (!title || !target || !description) {
+        showAlert('Please fill in title, target, and description.', 'warn');
         return;
       }
 
       try {
         await apiFetch('/community/reports', {
           method: 'POST',
-          body: JSON.stringify({ reporterName, type, title, targetIdentifier, description, city, state, tags })
+          body: JSON.stringify({
+            reporterName: author || 'Anonymous',
+            category,
+            title,
+            target,
+            city,
+            state,
+            description
+          })
         });
-        showAlert('Report submitted for review.', 'success');
+
+        showAlert('Report submitted! Thank you for protecting the community.', 'safe');
         closeModal('reportModal');
+        document.getElementById('repTitle').value = '';
+        document.getElementById('repTarget').value = '';
+        document.getElementById('repDesc').value = '';
         loadCommunityFeed();
-      } catch (err) { showAlert(err.message, 'danger'); }
+      } catch (err) {
+        showAlert(err.message, 'danger');
+      }
     }
   </script>
 </body>

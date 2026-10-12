@@ -9,150 +9,186 @@
 </head>
 <body>
 
-  <!-- ── Navigation ─────────────────────────────────────── -->
-  <nav class="nav" role="navigation" aria-label="Main navigation">
-    <div class="nav-inner">
-      <a href="/" class="nav-brand" aria-label="Authentica home">
-        <div class="brand-icon" aria-hidden="true">A</div>
-        Authentica
+  <div class="app-shell">
+    <!-- ── Left Sidebar (Cyber SOC Theme matching screenshot) ── -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-header-row">
+        <a href="/" class="sidebar-brand">
+          <span class="sidebar-brand-dot"></span>
+          AUTHENTICA <span class="brand-sub">SECURE</span>
+        </a>
+        <button class="sidebar-close-btn" onclick="toggleSidebar(false)" aria-label="Close navigation">&times;</button>
+      </div>
+
+      <a href="/scanner" class="sidebar-cta-btn">
+        <span>New Operation</span>
+        <span class="cta-plus">+</span>
       </a>
-      <div class="nav-links">
-        <a href="/"          class="nav-link active">Home</a>
-        <a href="/scanner"   class="nav-link">Scanner</a>
-        <a href="/community" class="nav-link">Threat Feed</a>
-      </div>
-      <div class="nav-actions">
-        <a href="/scanner" class="btn btn-primary btn-sm">Scan now</a>
-      </div>
-    </div>
-  </nav>
 
-  <div id="globalAlert" class="alert" style="display:none;position:fixed;top:70px;right:var(--sp-6);z-index:300;max-width:400px;"></div>
+      <div class="sidebar-category">Operations</div>
+      <nav class="sidebar-nav">
+        <a href="/dashboard" class="sidebar-link">
+          <span class="sidebar-link-icon">⊞</span> Dashboard
+        </a>
+        <a href="/scanner" class="sidebar-link">
+          <span class="sidebar-link-icon">⌖</span> Vulnerabilities
+        </a>
+        <a href="/community" class="sidebar-link">
+          <span class="sidebar-link-icon">⚡</span> Threats
+        </a>
+        <a href="/admin" class="sidebar-link">
+          <span class="sidebar-link-icon">🛡️</span> Compliance
+        </a>
+        <a href="/dashboard" class="sidebar-link">
+          <span class="sidebar-link-icon">🔐</span> Secure Vault
+        </a>
+        <a href="/admin" class="sidebar-link">
+          <span class="sidebar-link-icon">🔗</span> API Integrations
+        </a>
+      </nav>
 
-  <main>
-    <!-- ── Hero ──────────────────────────────────────────── -->
-    <section class="hero">
-      <div class="container">
-        <span class="hero-eyebrow">Threat Intelligence Platform</span>
-        <h1 class="hero-title">Detect Scams &amp; Cyber Threats in Seconds</h1>
-        <p class="hero-lead">
-          Analyse suspicious links, messages, phone numbers, QR codes and voice calls against real-time threat intelligence. Free and instant.
-        </p>
-        <div class="hero-actions">
-          <a href="/scanner" class="btn btn-primary btn-lg">Run a scan</a>
-          <a href="/community" class="btn btn-outline btn-lg">View threat feed</a>
+      <div class="sidebar-footer">
+        <div class="sidebar-node-pill">
+          <span>Cluster-EU-West</span>
+          <span class="node-status">Active</span>
         </div>
       </div>
-    </section>
+    </aside>
 
-    <!-- ── Stats ─────────────────────────────────────────── -->
-    <section style="padding-bottom:var(--sp-12);background:var(--col-surface);border-top:1px solid var(--col-border);border-bottom:1px solid var(--col-border);">
-      <div class="container">
-        <div class="stats-row" style="padding:var(--sp-8) 0;">
-          <div class="stat-cell">
-            <span class="stat-value" id="statAccuracy">99.4%</span>
-            <span class="stat-label">Phishing detection accuracy</span>
+    <!-- ── Main Viewport ────────────────────────────────────── -->
+    <div class="app-viewport">
+      <!-- Topbar Header -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button class="topbar-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
+          <nav class="topbar-breadcrumbs">
+            <a href="/">🏠</a>
+            <span class="sep">/</span>
+            <span class="current">Cyber Threat Defense Operations</span>
+          </nav>
+        </div>
+        <div class="topbar-right">
+          <div class="topbar-pulse-indicator">
+            <span class="topbar-pulse-dot"></span>
+            Zero-Trust Shield Active
           </div>
-          <div class="stat-cell">
-            <span class="stat-value" id="statEngines">5+</span>
-            <span class="stat-label">Threat analysis engines</span>
+          <a href="/scanner" class="topbar-export-btn">
+            ⚡ Run Scan
+          </a>
+        </div>
+      </header>
+
+      <div id="globalAlert" class="alert" style="display:none;position:fixed;top:70px;right:var(--sp-6);z-index:300;max-width:400px;"></div>
+
+      <main class="app-content">
+        <!-- ── Hero ──────────────────────────────────────────── -->
+        <section class="hero">
+          <span class="hero-eyebrow">Threat Intelligence Platform</span>
+          <h1 class="hero-title">Detect Scams &amp; Cyber Threats in Seconds</h1>
+          <p class="hero-lead">
+            Analyse suspicious links, messages, phone numbers, QR codes and voice calls against real-time threat intelligence. Free, private and instant.
+          </p>
+          <div class="hero-actions">
+            <a href="/scanner" class="btn btn-primary btn-lg">Run Deep Threat Scan</a>
+            <a href="/community" class="btn btn-outline btn-lg">View Live Threat Radar</a>
           </div>
-          <div class="stat-cell">
-            <span class="stat-value" id="statLatency">&lt; 50 ms</span>
-            <span class="stat-label">Heuristic scan latency</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-value" id="statScans">Zero-trust</span>
-            <span class="stat-label" id="statScansLabel">Security architecture</span>
+        </section>
+
+        <!-- ── Stats Row ─────────────────────────────────────── -->
+        <div class="card" style="margin-bottom:var(--sp-10);">
+          <div class="stats-row">
+            <div class="stat-cell">
+              <span class="stat-value" id="statAccuracy" style="color:var(--col-brand);">99.4%</span>
+              <span class="stat-label">Phishing Detection Accuracy</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-value" id="statEngines" style="color:var(--col-brand);">5+</span>
+              <span class="stat-label">Multi-Modal Engines</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-value" id="statLatency">&lt; 50 ms</span>
+              <span class="stat-label">Heuristic Scan Latency</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-value" id="statScans">Zero-Trust</span>
+              <span class="stat-label" id="statScansLabel">Security Architecture</span>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- ── Quick Scan ─────────────────────────────────────── -->
-    <section style="padding:var(--sp-12) 0;">
-      <div class="container">
-        <h2 style="text-align:center;margin-bottom:var(--sp-2);">Quick Threat Check</h2>
-        <p style="text-align:center;color:var(--col-muted);margin-bottom:var(--sp-8);">Paste anything suspicious — URL, SMS text or phone number — and get an instant verdict.</p>
+        <!-- ── Quick Scan Widget ──────────────────────────────── -->
+        <div class="card" style="max-width:760px;margin:0 auto var(--sp-12);">
+          <div class="card-header">
+            <span class="card-title">⚡ Instant Threat Verification</span>
+            <span class="badge badge-brand">Live Pipeline</span>
+          </div>
 
-        <div class="scan-widget">
           <div class="tab-strip" id="quickTabStrip">
-            <button class="tab-btn active" id="qtab-URL"   onclick="switchQuickTab('URL',   this)">URL / Link</button>
-            <button class="tab-btn"        id="qtab-TEXT"  onclick="switchQuickTab('TEXT',  this)">SMS / Message</button>
-            <button class="tab-btn"        id="qtab-PHONE" onclick="switchQuickTab('PHONE', this)">Phone Number</button>
+            <button class="tab-btn active" id="qtab-URL"   onclick="switchQuickTab('URL',   this)">🔗 URL / Domain</button>
+            <button class="tab-btn"        id="qtab-TEXT"  onclick="switchQuickTab('TEXT',  this)">💬 SMS / Message</button>
+            <button class="tab-btn"        id="qtab-PHONE" onclick="switchQuickTab('PHONE', this)">📞 Phone Number</button>
           </div>
 
           <div class="form-group">
-            <label class="form-label" id="quickLabel">Suspicious URL</label>
-            <input type="text" id="quickInput" class="form-control" placeholder="https://…">
+            <label class="form-label" id="quickLabel">Suspicious URL or Domain</label>
+            <input type="text" id="quickInput" class="form-control" placeholder="https://secure-sbi-kyc-update.com/login">
           </div>
 
           <div style="display:flex;gap:var(--sp-3);align-items:center;margin-bottom:var(--sp-4);">
-            <button class="btn btn-primary" id="scanSubmitBtn" onclick="handleQuickScan()">Analyse</button>
-            <button class="btn btn-ghost btn-sm" onclick="loadDemoThreat()">Load example</button>
+            <button class="btn btn-primary" id="scanSubmitBtn" onclick="handleQuickScan()">Analyse Target</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadDemoThreat()">Load Attack Example</button>
           </div>
 
           <div id="scanResult"></div>
         </div>
-      </div>
-    </section>
 
-    <!-- ── Features ──────────────────────────────────────── -->
-    <section style="padding:var(--sp-10) 0 var(--sp-16);background:var(--col-bg);">
-      <div class="container">
-        <h2 style="margin-bottom:var(--sp-2);">What Authentica detects</h2>
-        <p style="color:var(--col-muted);margin-bottom:var(--sp-8);max-width:560px;">Six specialised threat engines working together to protect you from every major attack vector.</p>
+        <!-- ── Feature Grid ──────────────────────────────────── -->
+        <div style="margin-bottom:var(--sp-6);">
+          <h2 style="font-size:1.5rem;font-weight:var(--fw-bold);color:#ffffff;margin-bottom:var(--sp-2);">Multi-Vector Threat Detection Coverage</h2>
+          <p class="text-muted" style="font-size:13px;margin-bottom:var(--sp-6);">Six specialised defense engines operating synchronously to shield users across modern digital communication channels.</p>
 
-        <div class="feature-grid">
-          <div class="feature-card">
-            <div class="feature-icon">&#x1F517;</div>
-            <h3 class="feature-title">URL &amp; Domain Analysis</h3>
-            <p class="feature-desc">Detects typosquatting, punycode attacks, high-risk TLDs, IP literals and known phishing domains.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">&#x1F4AC;</div>
-            <h3 class="feature-title">SMS &amp; Message Scanning</h3>
-            <p class="feature-desc">Identifies urgency manipulation, fake KYC deadlines, electricity disconnection threats and smishing patterns.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">&#x1F4F1;</div>
-            <h3 class="feature-title">UPI &amp; QR Shield</h3>
-            <p class="feature-desc">Validates UPI payment URIs and QR code payloads, flagging deceptive "collect" vs "pay" flows.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">&#x1F4DE;</div>
-            <h3 class="feature-title">Phone Number Lookup</h3>
-            <p class="feature-desc">Checks caller IDs against a live blacklist of known scam numbers and fraud hotlines.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">&#x1F399;</div>
-            <h3 class="feature-title">Voice &amp; Extortion Analysis</h3>
-            <p class="feature-desc">Screens call transcripts for digital-arrest scripts, CBI impersonation and courier-parcel extortion patterns.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">&#x1F465;</div>
-            <h3 class="feature-title">Community Intelligence</h3>
-            <p class="feature-desc">Crowdsourced incident reports with upvoting and geo-tagging power an always-current threat database.</p>
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-icon">&#x1F517;</div>
+              <h3 class="feature-title">URL &amp; Domain Analysis</h3>
+              <p class="feature-desc">Detects typosquatting, punycode attacks, high-risk TLDs, IP literals and known phishing domains.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">&#x1F4AC;</div>
+              <h3 class="feature-title">SMS &amp; Message Scanning</h3>
+              <p class="feature-desc">Identifies urgency manipulation, fake KYC deadlines, electricity disconnection threats and smishing patterns.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">&#x1F4F1;</div>
+              <h3 class="feature-title">UPI &amp; QR Shield</h3>
+              <p class="feature-desc">Validates UPI payment URIs and QR code payloads, flagging deceptive "collect" vs "pay" flows.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">&#x1F4DE;</div>
+              <h3 class="feature-title">Phone Number Lookup</h3>
+              <p class="feature-desc">Checks caller IDs against a live blacklist of known scam numbers and fraud hotlines.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">&#x1F399;</div>
+              <h3 class="feature-title">Voice AI &amp; Extortion Analysis</h3>
+              <p class="feature-desc">Screens call transcripts for digital-arrest scripts, CBI impersonation and courier-parcel extortion patterns.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">&#x1F465;</div>
+              <h3 class="feature-title">Community Threat Radar</h3>
+              <p class="feature-desc">Crowdsourced incident reports with upvoting and geo-tagging power an always-current threat database.</p>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="footer-inner">
-      <p class="footer-copy">&copy; 2026 Authentica Inc. All rights reserved.</p>
-      <div class="footer-links">
-        <a href="/scanner">Scanner</a>
-        <a href="/community">Threat Feed</a>
-      </div>
+      </main>
     </div>
-  </footer>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="/js/app.js"></script>
   <script>
     let _quickTab = 'URL';
+
 
     function switchQuickTab(tab, btn) {
       _quickTab = tab;
@@ -160,9 +196,9 @@
       btn.classList.add('active');
       const label = document.getElementById('quickLabel');
       const input = document.getElementById('quickInput');
-      if (tab === 'URL')   { label.textContent = 'Suspicious URL or domain'; input.placeholder = 'https://secure-sbi-kyc-update.com/login'; }
-      if (tab === 'TEXT')  { label.textContent = 'Suspicious SMS / message'; input.placeholder = 'Urgent! Your electricity will be disconnected…'; }
-      if (tab === 'PHONE') { label.textContent = 'Unknown phone number';     input.placeholder = '+91 98765 43210'; }
+      if (tab === 'URL')   { label.textContent = 'Suspicious URL or Domain'; input.placeholder = 'https://secure-sbi-kyc-update.com/login'; }
+      if (tab === 'TEXT')  { label.textContent = 'Suspicious SMS / Message'; input.placeholder = 'Urgent! Your electricity will be disconnected…'; }
+      if (tab === 'PHONE') { label.textContent = 'Unknown Phone Number';     input.placeholder = '+91 98765 43210'; }
       document.getElementById('scanResult').innerHTML = '';
     }
 
