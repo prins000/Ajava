@@ -51,7 +51,7 @@ public class QrAnalysisEngine {
             String transactionNote = upiParams.get("tn"); // Transaction Note
             String amount = upiParams.get("am");
 
-            flags.add("Parsed UPI Payment Payload: Payee = " + (payeeName != null ? payeeName : "N/A") + ", VPA = " + (payeeVpa != null ? payeeVpa : "N/A"));
+            flags.add("Parsed UPI Payment Payload: Payee = " + (payeeName != null ? payeeName : "N/A") + ", VPA = " + (payeeVpa != null ? payeeVpa : "N/A") + (amount != null ? ", Amount = Rs " + amount : ""));
 
             if (payeeVpa != null) {
                 if (fraudQRRepository.findByUpiHandle(payeeVpa).isPresent()) {

@@ -1,13 +1,20 @@
 package com.authentica;
 
+import com.authentica.model.HeuristicRule;
 import com.authentica.model.enums.RiskLevel;
+import com.authentica.model.enums.RuleCategory;
 import com.authentica.repository.FraudURLRepository;
+import com.authentica.repository.HeuristicRuleRepository;
 import com.authentica.repository.WhitelistRepository;
+import com.authentica.service.OutboundProbeService;
 import com.authentica.service.engine.EngineResult;
 import com.authentica.service.engine.UrlAnalysisEngine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -17,13 +24,30 @@ class UrlAnalysisEngineTest {
 
     private FraudURLRepository fraudURLRepository;
     private WhitelistRepository whitelistRepository;
+    private HeuristicRuleRepository ruleRepository;
+    private OutboundProbeService outboundProbeService;
     private UrlAnalysisEngine engine;
 
     @BeforeEach
     void setUp() {
         fraudURLRepository = Mockito.mock(FraudURLRepository.class);
         whitelistRepository = Mockito.mock(WhitelistRepository.class);
-        engine = new UrlAnalysisEngine(fraudURLRepository, whitelistRepository);
+        ruleRepository = Mockito.mock(HeuristicRuleRepository.class);
+        outboundProbeService = new OutboundProbeService() {
+            @Override
+            public ProbeResult probe(String targetUrl, String host) {
+                return null;
+            }
+        };
+
+        when(ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.SUSPICIOUS_TLD)).thenReturn(Collections.emptyList());
+        when(ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.URL_KEYWORD)).thenReturn(List.of(
+                new HeuristicRule(RuleCategory.URL_KEYWORD, "sbi", 25, "Security lure keyword: sbi"),
+                new HeuristicRule(RuleCategory.URL_KEYWORD, "kyc", 25, "Security lure keyword: kyc"),
+                new HeuristicRule(RuleCategory.URL_KEYWORD, "login", 20, "Security lure keyword: login")
+        ));
+
+        engine = new UrlAnalysisEngine(fraudURLRepository, whitelistRepository, ruleRepository, outboundProbeService);
     }
 
     @Test

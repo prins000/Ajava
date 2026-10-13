@@ -3,24 +3,23 @@
    Deep matte obsidian aesthetic with electric cyber orange accent
    Single source of truth for the entire Authentica application.
    ============================================================ */
-
 :root {
-  /* ── Colour: Dark Obsidian Surface Palette ───────────────── */
+  /* ── Colour: Dark Obsidian Surface Palette (Cyber SOC Theme) ─ */
   --col-white:         #ffffff;
   --col-bg:            #090b0e;        /* Deep matte black / obsidian */
   --col-surface:       #12151c;        /* Elevated card surface */
   --col-surface-2:     #171b24;        /* Secondary panel / inset */
   --col-surface-3:     #1f2430;        /* Tertiary / hover surface */
-  --col-surface-glass: rgba(18, 21, 28, 0.92);
+  --col-surface-glass: rgba(18, 21, 28, 0.94);
 
-  --col-border:        #1f242e;        /* Subtle crisp borders */
+  --col-border:        #1f242e;        /* Crisp subtle borders */
   --col-border-mid:    #2d3444;        /* Active/focused borders */
   --col-border-glow:   rgba(255, 87, 34, 0.35);
 
-  --col-ink:           #ffffff;        /* Headings & primary typography */
-  --col-body:          #cbd5e1;        /* Crisp silver body copy */
-  --col-muted:         #7d899c;        /* Captions, labels, metadata */
-  --col-placeholder:   #505a6e;
+  --col-ink:           #ffffff;        /* Headings & primary typography (crisp pure white) */
+  --col-body:          #e2e8f0;        /* Crisp silver-white body copy */
+  --col-muted:         #94a3b8;        /* Captions, labels, metadata */
+  --col-placeholder:   #64748b;
 
   /* ── Cyber Orange Brand Accent (Matches Screenshot CTA) ───── */
   --col-brand:         #ff5722;        /* High-impact neon security orange */

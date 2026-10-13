@@ -4,7 +4,6 @@ import com.authentica.dto.CommunityReportDto;
 import com.authentica.model.CommunityReport;
 import com.authentica.model.FraudNumber;
 import com.authentica.model.FraudURL;
-import com.authentica.model.User;
 import com.authentica.model.enums.ReportStatus;
 import com.authentica.repository.CommunityReportRepository;
 import com.authentica.repository.FraudNumberRepository;
@@ -130,4 +129,9 @@ public class CommunityReportService {
             }
         }
     }
+
+    public void deleteReport(Long reportId) {
+        reportRepository.deleteById(reportId);
+    }
 }
+

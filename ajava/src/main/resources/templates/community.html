@@ -308,9 +308,11 @@
           method: 'POST',
           body: JSON.stringify({
             reporterName: author || 'Anonymous',
-            category,
+            type: category,
+            category: category,
             title,
-            target,
+            targetIdentifier: target,
+            target: target,
             city,
             state,
             description

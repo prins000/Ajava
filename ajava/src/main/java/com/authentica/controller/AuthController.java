@@ -4,7 +4,6 @@ import com.authentica.dto.ApiResponse;
 import com.authentica.dto.AuthDto;
 import com.authentica.model.User;
 import com.authentica.repository.UserRepository;
-import com.authentica.security.JwtTokenProvider;
 import com.authentica.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,12 +15,10 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserRepository userRepository;
-    private final JwtTokenProvider tokenProvider;
 
-    public AuthController(AuthService authService, UserRepository userRepository, JwtTokenProvider tokenProvider) {
+    public AuthController(AuthService authService, UserRepository userRepository) {
         this.authService = authService;
         this.userRepository = userRepository;
-        this.tokenProvider = tokenProvider;
     }
 
     @PostMapping("/register")

@@ -110,6 +110,16 @@ public class AdminController {
         }
     }
 
+    @DeleteMapping("/reports/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteReport(@PathVariable Long id) {
+        try {
+            communityReportService.deleteReport(id);
+            return ResponseEntity.ok(ApiResponse.success("Report deleted successfully.", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(ApiResponse.error("Failed to delete report: " + e.getMessage()));
+        }
+    }
+
     @PutMapping("/settings")
     public ResponseEntity<ApiResponse<AppSettings>> updateSetting(@RequestParam String key,
                                                                   @RequestParam String value,
