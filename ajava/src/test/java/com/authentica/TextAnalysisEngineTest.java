@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,17 +24,20 @@ class TextAnalysisEngineTest {
     @BeforeEach
     void setUp() {
         ruleRepository = Mockito.mock(HeuristicRuleRepository.class);
-        engine = new TextAnalysisEngine(ruleRepository);
 
         when(ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.SMS_URGENCY)).thenReturn(List.of(
-                new HeuristicRule(RuleCategory.SMS_URGENCY, "disconnected", 30, "Psychological urgency pressure tactic: 'disconnected'"),
-                new HeuristicRule(RuleCategory.SMS_URGENCY, "account blocked", 45, "Psychological urgency pressure tactic: 'account blocked'")
+                new HeuristicRule(RuleCategory.SMS_URGENCY, "electricity", 40, "High psychological urgency lure detected: electricity disconnect"),
+                new HeuristicRule(RuleCategory.SMS_URGENCY, "within 24 hours", 40, "High psychological urgency lure detected: within 24 hours")
         ));
-        when(ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.SMS_FINANCIAL_LURE)).thenReturn(List.of());
+
         when(ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.SMS_CREDENTIAL_TRAP)).thenReturn(List.of(
-                new HeuristicRule(RuleCategory.SMS_CREDENTIAL_TRAP, "share otp", 45, "Malicious remote access or credential harvest trap: 'share otp'"),
-                new HeuristicRule(RuleCategory.SMS_CREDENTIAL_TRAP, "update kyc", 45, "Malicious remote access or credential harvest trap: 'update kyc'")
+                new HeuristicRule(RuleCategory.SMS_CREDENTIAL_TRAP, "otp", 50, "Sensitive data solicitation: OTP request"),
+                new HeuristicRule(RuleCategory.SMS_CREDENTIAL_TRAP, "pin", 50, "Sensitive data solicitation: PIN request")
         ));
+
+        when(ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.SMS_FINANCIAL_LURE)).thenReturn(Collections.emptyList());
+
+        engine = new TextAnalysisEngine(ruleRepository);
     }
 
     @Test

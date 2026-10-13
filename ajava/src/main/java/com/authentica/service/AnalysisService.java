@@ -2,7 +2,6 @@ package com.authentica.service;
 
 import com.authentica.dto.AnalysisDto;
 import com.authentica.model.Analysis;
-import com.authentica.model.User;
 import com.authentica.model.enums.AnalysisStatus;
 import com.authentica.model.enums.AnalysisType;
 import com.authentica.model.enums.RiskLevel;

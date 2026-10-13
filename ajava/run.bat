@@ -1,5 +1,9 @@
 @echo off
+echo ========================================================
 echo Starting Authentica Spring Boot Platform...
+echo Zero-configuration H2 Database mode on port 8080
+echo ========================================================
 cd /d "%~dp0"
-"C:\Users\HP\.m2\wrapper\dists\apache-maven-3.10.0-bin\39q0qgmngdu329psje7bjgne79\apache-maven-3.10.0\bin\mvn.cmd" spring-boot:run "-Dspring-boot.run.profiles=mysql"
+call mvnw.cmd spring-boot:run
 pause
+

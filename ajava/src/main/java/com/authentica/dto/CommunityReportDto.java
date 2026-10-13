@@ -22,12 +22,18 @@ public class CommunityReportDto {
 
         public String getType() { return type; }
         public void setType(String type) { this.type = type; }
+        public void setCategory(String category) { this.type = category; }
+        public String getCategory() { return this.type; }
+
         public String getTitle() { return title; }
         public void setTitle(String title) { this.title = title; }
         public String getDescription() { return description; }
         public void setDescription(String description) { this.description = description; }
+
         public String getTargetIdentifier() { return targetIdentifier; }
         public void setTargetIdentifier(String targetIdentifier) { this.targetIdentifier = targetIdentifier; }
+        public void setTarget(String target) { this.targetIdentifier = target; }
+        public String getTarget() { return this.targetIdentifier; }
         public String getAdditionalInfo() { return additionalInfo; }
         public void setAdditionalInfo(String additionalInfo) { this.additionalInfo = additionalInfo; }
         public String getTags() { return tags; }

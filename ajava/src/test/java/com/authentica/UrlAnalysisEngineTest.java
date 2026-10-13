@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,16 +33,21 @@ class UrlAnalysisEngineTest {
         fraudURLRepository = Mockito.mock(FraudURLRepository.class);
         whitelistRepository = Mockito.mock(WhitelistRepository.class);
         ruleRepository = Mockito.mock(HeuristicRuleRepository.class);
-        outboundProbeService = Mockito.mock(OutboundProbeService.class);
-        engine = new UrlAnalysisEngine(fraudURLRepository, whitelistRepository, ruleRepository, outboundProbeService);
+        outboundProbeService = new OutboundProbeService() {
+            @Override
+            public ProbeResult probe(String targetUrl, String host) {
+                return null;
+            }
+        };
 
+        when(ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.SUSPICIOUS_TLD)).thenReturn(Collections.emptyList());
         when(ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.URL_KEYWORD)).thenReturn(List.of(
-                new HeuristicRule(RuleCategory.URL_KEYWORD, "kyc", 15, "Security lure keyword detected: 'kyc'"),
-                new HeuristicRule(RuleCategory.URL_KEYWORD, "sbi", 15, "Security lure keyword detected: 'sbi'"),
-                new HeuristicRule(RuleCategory.URL_KEYWORD, "secure", 15, "Security lure keyword detected: 'secure'"),
-                new HeuristicRule(RuleCategory.URL_KEYWORD, "login", 15, "Security lure keyword detected: 'login'")
+                new HeuristicRule(RuleCategory.URL_KEYWORD, "sbi", 25, "Security lure keyword: sbi"),
+                new HeuristicRule(RuleCategory.URL_KEYWORD, "kyc", 25, "Security lure keyword: kyc"),
+                new HeuristicRule(RuleCategory.URL_KEYWORD, "login", 20, "Security lure keyword: login")
         ));
-        when(ruleRepository.findByCategoryAndIsActiveTrue(RuleCategory.SUSPICIOUS_TLD)).thenReturn(List.of());
+
+        engine = new UrlAnalysisEngine(fraudURLRepository, whitelistRepository, ruleRepository, outboundProbeService);
     }
 
     @Test

@@ -336,21 +336,30 @@
               </tr>
             </thead>
             <tbody>
-              ${reports.map(r => `
+              ${reports.map(r => {
+                const statusBadge = r.status === 'VERIFIED' ? 'badge-safe' : (r.status === 'PENDING' ? 'badge-warn' : 'badge-neutral');
+                const cat = escHtml(r.type || r.category || 'THREAT');
+                const tgt = escHtml(r.targetIdentifier || r.target || '—');
+                const votes = r.upvotes ?? r.votesUp ?? 0;
+                return `
                 <tr>
-                  <td><span class="badge ${r.status === 'VERIFIED' ? 'badge-safe' : 'badge-neutral'}">${r.status || 'UNVERIFIED'}</span></td>
-                  <td><span class="badge badge-neutral">${escHtml(r.category)}</span></td>
+                  <td><span class="badge ${statusBadge}">${r.status || 'PENDING'}</span></td>
+                  <td><span class="badge badge-neutral">${cat}</span></td>
                   <td><strong>${escHtml(r.title)}</strong></td>
-                  <td class="font-mono truncate" style="max-width:180px;">${escHtml(r.target)}</td>
-                  <td>${r.votesUp || 0}</td>
+                  <td class="font-mono truncate" style="max-width:200px;">${tgt}</td>
+                  <td>${votes}</td>
                   <td>
-                    <div style="display:flex;gap:var(--sp-1);">
-                      <button class="btn btn-outline btn-sm" onclick="moderateReport(${r.id}, 'VERIFIED')">Verify</button>
+                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                      ${r.status === 'PENDING' ? `
+                        <button class="btn btn-outline btn-sm" style="color:var(--col-success);border-color:var(--col-success-bd);" onclick="moderateReport(${r.id}, 'VERIFIED')">Verify</button>
+                        <button class="btn btn-outline btn-sm" style="color:var(--col-warn);border-color:var(--col-warn-bd);" onclick="moderateReport(${r.id}, 'REJECTED')">Reject</button>
+                      ` : ''}
                       <button class="btn btn-ghost btn-sm" style="color:var(--col-danger);" onclick="deleteReport(${r.id})">Delete</button>
                     </div>
                   </td>
                 </tr>
-              `).join('')}
+                `;
+              }).join('')}
             </tbody>
           </table>
         `;
