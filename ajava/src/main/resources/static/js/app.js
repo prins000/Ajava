@@ -601,6 +601,28 @@ function renderScanResult(data) {
 
   window._lastScanData = data;
 
+  // Live synchronization with SOC Banner Card
+  const socCodeEl = document.getElementById('socThreatCode');
+  const socBreadcrumbEl = document.getElementById('breadcrumbOpCode');
+  const socBadge = document.getElementById('socThreatSeverityBadge');
+  const socRiskChip = document.getElementById('socRiskChip');
+  const socLastUpdate = document.getElementById('socLastUpdate');
+
+  if (a && a.id) {
+    const formattedCode = `THR-${a.id.toString().padStart(4, '0')}`;
+    if (socCodeEl) socCodeEl.textContent = `Threat - ${a.id.toString().padStart(4, '0')}`;
+    if (socBreadcrumbEl) socBreadcrumbEl.textContent = formattedCode;
+  }
+  if (socLastUpdate) socLastUpdate.textContent = 'Just now';
+  if (socBadge && a) {
+    socBadge.textContent = a.riskLevel || 'EVALUATED';
+    socBadge.className = (a.riskLevel === 'SAFE' || a.riskLevel === 'LOW') ? 'badge badge-safe' : ((a.riskLevel === 'MEDIUM') ? 'badge badge-warn' : 'soc-chip-critical');
+  }
+  if (socRiskChip && a) {
+    socRiskChip.textContent = `■ Score: ${100 - a.trustScore}/100`;
+    socRiskChip.className = (a.riskLevel === 'SAFE' || a.riskLevel === 'LOW') ? 'badge badge-safe' : ((a.riskLevel === 'MEDIUM') ? 'badge badge-warn' : 'soc-chip-critical');
+  }
+
   el.innerHTML = `
     <div class="result-panel">
       <div class="result-panel-head">

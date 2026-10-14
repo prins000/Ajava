@@ -20,7 +20,7 @@
         <button class="sidebar-close-btn" onclick="toggleSidebar(false)" aria-label="Close navigation">&times;</button>
       </div>
 
-      <a href="/scanner" class="sidebar-cta-btn">
+      <a href="javascript:void(0)" class="sidebar-cta-btn" onclick="startNewOperation()" title="Start New Threat Inspection Operation">
         <span>New Operation</span>
         <span class="cta-plus">+</span>
       </a>
@@ -66,7 +66,7 @@
             <span class="sep">/</span>
             <a href="/community">Threats</a>
             <span class="sep">/</span>
-            <span class="current">THR-5910</span>
+            <span class="current" id="breadcrumbOpCode">THR-5910</span>
           </nav>
         </div>
         <div class="topbar-right">
@@ -86,39 +86,53 @@
       <!-- Main Content -->
       <main class="app-content">
         <!-- Threat Analysis Title -->
-        <div style="margin-bottom:var(--sp-5);">
-          <h1 style="font-size:1.85rem;font-weight:var(--fw-bold);color:#ffffff;letter-spacing:-0.02em;">Threat Analysis</h1>
+        <div style="margin-bottom:var(--sp-5);display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:var(--sp-3);">
+          <div>
+            <h1 style="font-size:1.85rem;font-weight:var(--fw-bold);color:#ffffff;letter-spacing:-0.02em;">Threat Analysis</h1>
+            <p class="text-muted" style="font-size:13px;margin-top:2px;">Multi-vector forensic heuristics &amp; real-time extortion pattern inspection.</p>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="startNewOperation()" style="border-color:var(--col-brand);color:var(--col-brand);">
+            ⚡ New Operation
+          </button>
         </div>
 
-        <!-- ── Threat 5910 Banner Card (Exact Screenshot Match) ── -->
+        <!-- ── Dynamic SOC Threat Operation Banner Card ── -->
         <div class="soc-banner-card">
           <div class="soc-banner-top">
             <div class="soc-threat-title-group">
-              <span class="soc-threat-code">Threat - 5910</span>
-              <span class="soc-chip-critical">Critical</span>
+              <span class="soc-threat-code" id="socThreatCode">Threat - 5910</span>
+              <span class="soc-chip-critical" id="socThreatSeverityBadge">Awaiting Inspection</span>
             </div>
             <div class="soc-status-chips">
-              <span class="soc-chip-active">● Active ▾</span>
-              <span class="soc-chip-critical">■ Critical ▾</span>
+              <span class="soc-chip-active" id="socStatusChip">● Live Operation</span>
+              <span class="badge badge-neutral" id="socRiskChip" style="font-size:11px;">■ Ready to Scan</span>
             </div>
           </div>
 
           <div class="soc-meta-grid">
             <div class="soc-meta-item">
               <div class="label">ANALYST</div>
-              <div class="val">❔ Unassigned ▾</div>
+              <div class="val" id="socAnalystContainer">
+                <select id="socAnalystSelect" class="form-control" style="height:30px;padding:2px 8px;font-size:12px;background:#0d1117;color:#38bdf8;border:1px solid #273349;border-radius:6px;cursor:pointer;" onchange="onAnalystChanged(this.value)" title="Assign Investigator / Analyst to this Operation">
+                  <option value="current">👤 Current User</option>
+                  <option value="SecOps Tier-1 Lead">🛡️ SecOps Tier-1 Lead</option>
+                  <option value="CERT-In Liaison">🇮🇳 CERT-In Threat Liaison</option>
+                  <option value="Forensic Special Ops">🔬 Forensic Special Ops</option>
+                  <option value="Unassigned">❔ Unassigned</option>
+                </select>
+              </div>
             </div>
             <div class="soc-meta-item">
               <div class="label">DETECTED</div>
-              <div class="val">2025-05-14</div>
+              <div class="val" id="socDetectedDate">Today</div>
             </div>
             <div class="soc-meta-item">
               <div class="label">SLA TARGET</div>
-              <div class="val">4h remaining</div>
+              <div class="val" id="socSlaTarget">4h remaining</div>
             </div>
             <div class="soc-meta-item">
               <div class="label">LAST UPDATE</div>
-              <div class="val">12m ago</div>
+              <div class="val" id="socLastUpdate">Just now</div>
             </div>
           </div>
         </div>
@@ -648,6 +662,79 @@
         tagsEl.innerHTML = tags.length ? tags.join(' ') : '<span class="badge badge-safe" style="font-size:11px;">No Obvious Manipulation Triggers</span>';
       }
     }
+
+    // ── Dynamic SOC Operation & Analyst Engine ─────────────────
+    let currentOperationCode = 'THR-' + Math.floor(1000 + Math.random() * 9000);
+
+    function initSocBanner() {
+      const codeEl = document.getElementById('socThreatCode');
+      const breadcrumbEl = document.getElementById('breadcrumbOpCode');
+      const dateEl = document.getElementById('socDetectedDate');
+      const lastUpdateEl = document.getElementById('socLastUpdate');
+      const analystSelect = document.getElementById('socAnalystSelect');
+
+      if (codeEl) codeEl.textContent = `Threat - ${currentOperationCode.replace('THR-', '')}`;
+      if (breadcrumbEl) breadcrumbEl.textContent = currentOperationCode;
+
+      const today = new Date().toISOString().split('T')[0];
+      if (dateEl) dateEl.textContent = today;
+      if (lastUpdateEl) lastUpdateEl.textContent = 'Just now';
+
+      const user = getUser();
+      if (analystSelect) {
+        if (user && user.name) {
+          const userRole = user.role === 'ROLE_ADMIN' ? '🛡️ SecOps Admin' : (user.role === 'ROLE_ANALYST' ? '🔬 Threat Analyst' : '👤 Citizen');
+          analystSelect.options[0].text = `${userRole}: ${user.name} (Active)`;
+          analystSelect.options[0].value = user.name;
+        } else {
+          analystSelect.options[0].text = '👤 Guest Investigator (You)';
+          analystSelect.options[0].value = 'Guest Investigator';
+        }
+      }
+    }
+
+    function onAnalystChanged(val) {
+      const lastUpdateEl = document.getElementById('socLastUpdate');
+      if (lastUpdateEl) lastUpdateEl.textContent = 'Just now';
+      showAlert(`Operation reassigned to: ${val}`, 'safe');
+    }
+
+    function startNewOperation() {
+      currentOperationCode = 'THR-' + Math.floor(1000 + Math.random() * 9000);
+      initSocBanner();
+
+      // Clear active and all inputs
+      if (document.getElementById('urlInput')) document.getElementById('urlInput').value = '';
+      if (document.getElementById('textInput')) document.getElementById('textInput').value = '';
+      if (document.getElementById('senderInput')) document.getElementById('senderInput').value = '';
+      if (document.getElementById('qrInput')) document.getElementById('qrInput').value = '';
+      if (document.getElementById('phoneInput')) document.getElementById('phoneInput').value = '';
+      if (document.getElementById('voiceTranscriptInput')) document.getElementById('voiceTranscriptInput').value = '';
+
+      const scanResult = document.getElementById('scanResult');
+      if (scanResult) scanResult.innerHTML = '';
+
+      const badge = document.getElementById('socThreatSeverityBadge');
+      const statusChip = document.getElementById('socStatusChip');
+      const riskChip = document.getElementById('socRiskChip');
+      if (badge) { badge.textContent = 'Awaiting Inspection'; badge.className = 'badge badge-neutral'; }
+      if (statusChip) { statusChip.textContent = '● New Operation'; }
+      if (riskChip) { riskChip.textContent = '■ Ready to Scan'; riskChip.className = 'badge badge-neutral'; }
+
+      updatePayloadSimulator();
+      showAlert(`✨ New Operation [${currentOperationCode}] initialized. Ready for inspection.`, 'safe');
+
+      const studio = document.getElementById('engineTabStrip');
+      if (studio) {
+        studio.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const activeInput = document.querySelector('.engine-panel.active input, .engine-panel.active textarea');
+        if (activeInput) setTimeout(() => activeInput.focus(), 350);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initSocBanner();
+    });
   </script>
 </body>
 </html>
